@@ -1,0 +1,3 @@
+include MANIFEST.in README WHATSNEW
+recursive-include raw_sql_migrate *.*
+prune "*.pyc"
