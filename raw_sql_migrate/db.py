@@ -36,7 +36,7 @@ def execute(sql, params=None, return_result=None, commit=False, config=None):
     return result
 
 
-def check_if_migration_history_exists(config=None):
+def migration_history_exists(config=None):
 
     if not config:
         config = yaml_config
@@ -60,26 +60,24 @@ def check_if_migration_history_exists(config=None):
     return True if result else False
 
 
-def get_latest_migration_name(package, config=None):
-    result = None
+def get_latest_migration_number(package, config=None):
+    result = 0
 
     if not config:
         config = yaml_config
 
     sql = '''
         SELECT name
-        FROM %(history_table_name)s
-        WHERE package = %(package)s
-        ORDER BY id DESC;
-    '''
-    query_params = {
-        'history_table_name': config.history_table_name,
-        'package': package
-    }
+        FROM %s
+        WHERE package = %%s
+        ORDER BY id DESC LIMIT 1;
+    ''' % config.history_table_name
+    query_params = (package, )
 
     rows = execute(sql, params=query_params, return_result='fetchall', commit=False, config=config)
     if rows:
-        result = rows[0][0]
+        name = rows[0][0]
+        result = int(name.split('_')[0].strip('0'))
 
     return result
 
@@ -91,10 +89,22 @@ def create_history_table(config=None):
 
     sql = '''
         CREATE TABLE %s (
-            id INTEGER PRIMARY KEY,
+            id SERIAL PRIMARY KEY,
             package VARCHAR(200) NOT NULL,
             name VARCHAR(200) NOT NULL,
             processed_at  TIMESTAMP default current_timestamp
         );
     ''' % config.history_table_name
     execute(sql, params=(config.history_table_name, ), return_result=None, commit=True, config=config)
+
+
+def write_migration_history(name, package, config=None):
+
+    if not config:
+        config = yaml_config
+
+    sql = '''
+        INSERT INTO %s(name, package)
+        VALUES (%%s, %%s);
+    ''' % config.history_table_name
+    execute(sql, params=(name, package, ), return_result=None, commit=True, config=config)
