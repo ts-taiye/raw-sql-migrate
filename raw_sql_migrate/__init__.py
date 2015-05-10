@@ -30,4 +30,3 @@ class Config(object):
 
 config = Config()
 config.init_from_file()
-

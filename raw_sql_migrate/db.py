@@ -14,24 +14,46 @@ __all__ = (
 )
 
 
-def execute(sql, params=None, return_result=None, commit=False, config=None):
+class DatabaseApi(object):
 
-    if not config:
-        config = yaml_config
+    host = None
+    port = None
+    name = None
+    user = None
+    password = None
+    _connection = None
 
-    if not params:
-        params = {}
+    def __init__(self, host, port, name, user, password):
+        self.host = host
+        self.port = port
+        self.name = name
+        self.user = user
+        self.password = password
 
-    result = None
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._connection:
+            self._connection.close()
 
-    with connect(
-        database=config.name,
-        user=config.name,
-        password=config.password,
-        port=config.port,
-        host=config.host,
-    ) as connection:
-        with connection.cursor() as cursor:
+    @property
+    def connection(self):
+        if self._connection is None:
+            self._connection = connect(
+                database=self.name,
+                user=self.user,
+                password=self.password,
+                port=self.port,
+                host=self.host
+            )
+        return self._connection
+
+    def execute(self, sql, params=None, return_result=None, commit=True):
+
+        if not params:
+            params = {}
+
+        result = None
+
+        with self.connection.cursor() as cursor:
             cursor.execute(sql, params)
             if not return_result:
                 result = None
@@ -41,14 +63,12 @@ def execute(sql, params=None, return_result=None, commit=False, config=None):
                 result = cursor.fetchall()
 
             if commit:
-                connection.commit()
-    return result
+                self.connection.commit()
+
+        return result
 
 
-def migration_history_exists(config=None):
-
-    if not config:
-        config = yaml_config
+def migration_history_exists(database_api, config=None):
 
     sql = '''
     SELECT *
@@ -56,12 +76,11 @@ def migration_history_exists(config=None):
     WHERE table_name=%(history_table_name)s
     '''
     try:
-        result = execute(
+        result = database_api.execute(
             sql,
             params={'history_table_name': config.history_table_name},
             return_result='rowcount',
-            commit=False,
-            config=config
+            commit=False
         )
     except ProgrammingError:
         result = None
@@ -69,7 +88,7 @@ def migration_history_exists(config=None):
     return True if result else False
 
 
-def get_latest_migration_number(package, config=None):
+def get_latest_migration_number(database_api, package, config=None):
     result = 0
 
     if not config:
@@ -83,7 +102,7 @@ def get_latest_migration_number(package, config=None):
     ''' % config.history_table_name
     query_params = (package, )
 
-    rows = execute(sql, params=query_params, return_result='fetchall', commit=False, config=config)
+    rows = database_api.execute(sql, params=query_params, return_result='fetchall', commit=False)
     if rows:
         name = rows[0][0]
         result = int(name.split('_')[0].strip('0'))
@@ -91,7 +110,7 @@ def get_latest_migration_number(package, config=None):
     return result
 
 
-def create_history_table(config=None):
+def create_history_table(database_api, config=None):
 
     if not config:
         config = yaml_config
@@ -104,10 +123,10 @@ def create_history_table(config=None):
             processed_at  TIMESTAMP default current_timestamp
         );
     ''' % config.history_table_name
-    execute(sql, params=(config.history_table_name, ), return_result=None, commit=True, config=config)
+    database_api.execute(sql, params=(config.history_table_name, ), return_result=None, commit=True)
 
 
-def write_migration_history(name, package, config=None):
+def write_migration_history(database_api, name, package, config=None):
 
     if not config:
         config = yaml_config
@@ -116,10 +135,10 @@ def write_migration_history(name, package, config=None):
         INSERT INTO %s(name, package)
         VALUES (%%s, %%s);
     ''' % config.history_table_name
-    execute(sql, params=(name, package, ), return_result=None, commit=True, config=config)
+    database_api.execute(sql, params=(name, package, ), return_result=None, commit=True)
 
 
-def delete_migration_history(name, package, config=None):
+def delete_migration_history(database_api, name, package, config=None):
 
     if not config:
         config = yaml_config
@@ -128,4 +147,4 @@ def delete_migration_history(name, package, config=None):
         DELETE FROM %s
         WHERE name=%%s and package=%%s
     ''' % config.history_table_name
-    execute(sql, params=(name, package, ), return_result=None, commit=True, config=config)
+    database_api.execute(sql, params=(name, package, ), return_result=None, commit=True)
