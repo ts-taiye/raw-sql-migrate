@@ -4,6 +4,14 @@ from psycopg2 import connect, ProgrammingError
 
 from raw_sql_migrate import config as yaml_config
 
+__all__ = (
+    'execute',
+    'migration_history_exists',
+    'get_latest_migration_number',
+    'create_history_table',
+    'write_migration_history',
+)
+
 
 def execute(sql, params=None, return_result=None, commit=False, config=None):
 
