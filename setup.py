@@ -14,6 +14,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'psycopg2',
+        'PyYAML',
     ],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
