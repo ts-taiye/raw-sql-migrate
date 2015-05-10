@@ -16,14 +16,12 @@ __all__ = (
 MIGRATION_NAME_TEMPLATE = '%04d'
 MIGRATION_TEMPLATE = """# encoding: utf-8
 
-from raw_sql_migrate.db import execute
 
-
-def forward():
+def forward(database_api):
     pass
 
 
-def backward():
+def backward(database_api):
     pass
 
 """

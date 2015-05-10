@@ -88,7 +88,7 @@ class Api(object):
             if not hasattr(module, 'forward'):
                 raise IncorrectMigrationFile(u'File %s has no forward function' % migration_python_path)
 
-            module.forward()
+            module.forward(self.database_api)
             write_migration_history(self.database_api, name, package)
 
     def backward(self, package, migration_number=None):
@@ -135,5 +135,5 @@ class Api(object):
             if not hasattr(module, 'backward'):
                 raise IncorrectMigrationFile(u'File %s has no backward function' % migration_python_path)
 
-            module.backward()
+            module.backward(self.database_api)
             delete_migration_history(self.database_api, name, package)
