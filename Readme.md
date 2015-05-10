@@ -3,24 +3,24 @@ Raw-sql-migrate is replacement for South migration system without ORM using raw 
 
 ## *Usage*
 This package provides python api. In order to use it just import api module.
-'''python
+```python
 from raw_sql_migrate import api
-'''
+```
 
 ### *Creating new migration*
 In order to create new migration just call create method:
-'''python
+```python
 api.create(package, name='', config='')
-'''
+```
 Calling of it will create new history migrations history table,
 migrations directory in the package and py migration file
 Example:
-'''python
+```python
 api.create('package_a.package_b', name='initial')
-'''
+```
 
 ### *Migration forward*
 In order to migrate forward call
-'''python
+```python
 api.forward(package, head=False, config='')
-'''
+```
