@@ -10,6 +10,7 @@ __all__ = (
     'get_latest_migration_number',
     'create_history_table',
     'write_migration_history',
+    'delete_migration_history',
 )
 
 
@@ -114,5 +115,17 @@ def write_migration_history(name, package, config=None):
     sql = '''
         INSERT INTO %s(name, package)
         VALUES (%%s, %%s);
+    ''' % config.history_table_name
+    execute(sql, params=(name, package, ), return_result=None, commit=True, config=config)
+
+
+def delete_migration_history(name, package, config=None):
+
+    if not config:
+        config = yaml_config
+
+    sql = '''
+        DELETE FROM %s
+        WHERE name=%%s and package=%%s
     ''' % config.history_table_name
     execute(sql, params=(name, package, ), return_result=None, commit=True, config=config)

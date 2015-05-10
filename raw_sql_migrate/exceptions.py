@@ -3,7 +3,8 @@
 __all__ = (
     'RawSqlMigrateException',
     'InconsistentParamsException',
-    'NoNewMigrationsFoundException',
+    'NoForwardMigrationsFound',
+    'NoBackwardMigrationsFound',
     'IncorrectMigrationFile',
 )
 
@@ -16,7 +17,11 @@ class InconsistentParamsException(RawSqlMigrateException):
     pass
 
 
-class NoNewMigrationsFoundException(RawSqlMigrateException):
+class NoForwardMigrationsFound(RawSqlMigrateException):
+    pass
+
+
+class NoBackwardMigrationsFound(RawSqlMigrateException):
     pass
 
 
