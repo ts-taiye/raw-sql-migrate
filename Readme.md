@@ -22,5 +22,5 @@ api.create('package_a.package_b', name='initial')
 ### *Migration forward*
 In order to migrate forward call
 ```python
-api.forward(package, head=False, config='')
+api.forward(package, migration_number=None, config='')
 ```
