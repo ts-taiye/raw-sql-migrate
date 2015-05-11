@@ -52,15 +52,7 @@ class Api(object):
         :param migration_number: number of migration to migrate to. Can't be used with full_forward. Example: 0042
         :return: None
         """
-        if not migration_history_exists(self.database_api, self.config):
-            create_history_table(self.database_api, self.config)
-            current_migration_number = 0
-        else:
-            result = get_latest_migration_number(self.database_api, package, self.config)
-            if result:
-                current_migration_number = result
-            else:
-                current_migration_number = 0
+        current_migration_number = self.__get_current_migration_number(package)
 
         if migration_number and migration_number < current_migration_number:
             raise InconsistentParamsException(
@@ -97,15 +89,7 @@ class Api(object):
         :param migration_number: migration number to downgrade to. Can't be used with full_backward. Example: 0042
         :return: None
         """
-        if not migration_history_exists(self.database_api, self.config):
-            create_history_table(self.database_api, self.config)
-            current_migration_number = 0
-        else:
-            result = get_latest_migration_number(self.database_api, package, self.config)
-            if result:
-                current_migration_number = result
-            else:
-                current_migration_number = 0
+        current_migration_number = self.__get_current_migration_number(package)
 
         if migration_number and migration_number > current_migration_number:
             raise InconsistentParamsException(
@@ -137,3 +121,17 @@ class Api(object):
 
             module.backward(self.database_api)
             delete_migration_history(self.database_api, name, package)
+
+    def __get_current_migration_number(self, package):
+
+        if not migration_history_exists(self.database_api, self.config):
+            create_history_table(self.database_api, self.config)
+            current_migration_number = 0
+        else:
+            result = get_latest_migration_number(self.database_api, package, self.config)
+            if result:
+                current_migration_number = result
+            else:
+                current_migration_number = 0
+
+        return current_migration_number
