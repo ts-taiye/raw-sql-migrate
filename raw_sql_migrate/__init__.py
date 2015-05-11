@@ -29,4 +29,7 @@ class Config(object):
         self.history_table_name = config_data['history_table_name']
 
 config = Config()
-config.init_from_file()
+try:
+    config.init_from_file()
+except IOError:
+    pass
