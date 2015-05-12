@@ -2,12 +2,13 @@
 
 from importlib import import_module
 
-from db import DatabaseApi
-from exceptions import (
+from raw_sql_migrate import config as file_config
+from raw_sql_migrate.db import DatabaseApi
+from raw_sql_migrate.exceptions import (
     InconsistentParamsException, NoForwardMigrationsFound, NoBackwardMigrationsFound,
     IncorrectMigrationFile,
 )
-from helpers import (
+from raw_sql_migrate.helpers import (
     generate_migration_name, get_package_migrations_directory,
     create_migration_file, get_migrations_list, get_migration_python_path_and_name,
     DatabaseHelper,
@@ -25,7 +26,12 @@ class Api(object):
     database_helper = None
 
     def __init__(self, config=None):
-        self.config = config
+
+        if config is not None:
+            self.config = config
+        else:
+            self.config = file_config
+
         self.database_api = DatabaseApi(config.host, config.port, config.name, config.user, config.password)
         self.database_helper = DatabaseHelper(self.database_api, self.config.history_table_name)
 
