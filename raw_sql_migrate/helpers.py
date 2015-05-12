@@ -3,7 +3,7 @@
 import os
 
 from importlib import import_module
-
+from psycopg2 import ProgrammingError
 
 __all__ = (
     'prepare_package_migration_directory',
@@ -11,6 +11,7 @@ __all__ = (
     'get_migration_python_path_and_name',
     'MIGRATION_NAME_TEMPLATE',
     'MIGRATION_TEMPLATE',
+    'DatabaseHelper',
 )
 
 MIGRATION_NAME_TEMPLATE = '%04d'
@@ -66,3 +67,81 @@ def get_migrations_list(package, directory=None):
 def get_migration_python_path_and_name(name, package):
     migration_module_name = name.strip('.py')
     return '.'.join((package,'migrations', migration_module_name, )), migration_module_name
+
+
+class DatabaseHelper(object):
+
+    database_api = None
+    migration_history_table_name = None
+
+    def __init__(self, database_api, migration_history_table_name):
+        self.database_api = database_api
+        self.migration_history_table_name = migration_history_table_name
+
+    def migration_history_exists(self):
+
+        sql = '''
+        SELECT *
+        FROM information_schema.tables
+        WHERE table_name=%(history_table_name)s
+        '''
+        try:
+            result = self.database_api.execute(
+                sql,
+                params={'history_table_name': self.migration_history_table_name},
+                return_result='rowcount',
+                commit=False
+            )
+        except ProgrammingError:
+            result = None
+
+        return True if result else False
+
+    def get_latest_migration_number(self, package):
+        result = 0
+        if not self.migration_history_exists():
+            self.create_history_table()
+        else:
+            sql = '''
+                SELECT name
+                FROM %s
+                WHERE package = %%s
+                ORDER BY id DESC LIMIT 1;
+            ''' % self.migration_history_table_name
+            query_params = (package, )
+
+            rows = self.database_api.execute(sql, params=query_params, return_result='fetchall', commit=False)
+            if rows:
+                name = rows[0][0]
+                result = int(name.split('_')[0].strip('0'))
+
+        return result
+
+    def create_history_table(self):
+
+        sql = '''
+            CREATE TABLE %s (
+                id SERIAL PRIMARY KEY,
+                package VARCHAR(200) NOT NULL,
+                name VARCHAR(200) NOT NULL,
+                processed_at  TIMESTAMP default current_timestamp
+            );
+        ''' % self.migration_history_table_name
+        self.database_api.execute(
+            sql, params=(self.migration_history_table_name, ), return_result=None, commit=True
+        )
+
+    def write_migration_history(self, name, package):
+
+        sql = '''
+            INSERT INTO %s(name, package)
+            VALUES (%%s, %%s);
+        ''' % self.migration_history_table_name
+        self.database_api.execute(sql, params=(name, package, ), return_result=None, commit=True)
+
+    def delete_migration_history(self, name, package):
+        sql = '''
+            DELETE FROM %s
+            WHERE name=%%s and package=%%s
+        ''' % self.migration_history_table_name
+        self.database_api.execute(sql, params=(name, package, ), return_result=None, commit=True)

@@ -2,12 +2,7 @@
 
 from importlib import import_module
 
-from db import (
-    DatabaseApi,
-    migration_history_exists, create_history_table,
-    get_latest_migration_number, write_migration_history,
-    delete_migration_history,
-)
+from db import DatabaseApi
 from exceptions import (
     InconsistentParamsException, NoForwardMigrationsFound, NoBackwardMigrationsFound,
     IncorrectMigrationFile,
@@ -15,6 +10,7 @@ from exceptions import (
 from helpers import (
     generate_migration_name, get_package_migrations_directory,
     create_migration_file, get_migrations_list, get_migration_python_path_and_name,
+    DatabaseHelper,
 )
 
 __all__ = (
@@ -26,10 +22,12 @@ class Api(object):
 
     config = None
     database_api = None
+    database_helper = None
 
     def __init__(self, config=None):
         self.config = config
         self.database_api = DatabaseApi(config.host, config.port, config.name, config.user, config.password)
+        self.database_helper = DatabaseHelper(self.database_api, self.config.history_table_name)
 
     def create(self, package, name=''):
         """
@@ -37,11 +35,11 @@ class Api(object):
         :param name: human readable name of migration
         :return: migration name
         """
-        if not migration_history_exists(self.config):
-            create_history_table(self.config)
+        if not self.database_helper.migration_history_exists():
+            self.database_helper.create_history_table()
             current_migration_number = 0
         else:
-            current_migration_number = get_latest_migration_number(self.database_api, package, self.config)
+            current_migration_number = self.database_helper.get_latest_migration_number(package)
         path_to_migrations = get_package_migrations_directory(package)
         migration_name = generate_migration_name(name, current_migration_number)
         create_migration_file(path_to_migrations, migration_name)
@@ -52,7 +50,7 @@ class Api(object):
         :param migration_number: number of migration to migrate to. Can't be used with full_forward. Example: 0042
         :return: None
         """
-        current_migration_number = self.__get_current_migration_number(package)
+        current_migration_number = self.database_helper.get_latest_migration_number(package)
 
         if migration_number and migration_number < current_migration_number:
             raise InconsistentParamsException(
@@ -81,7 +79,7 @@ class Api(object):
                 raise IncorrectMigrationFile(u'File %s has no forward function' % migration_python_path)
 
             module.forward(self.database_api)
-            write_migration_history(self.database_api, name, package)
+            self.database_helper.write_migration_history(name, package)
 
     def backward(self, package, migration_number=None):
         """
@@ -89,7 +87,7 @@ class Api(object):
         :param migration_number: migration number to downgrade to. Can't be used with full_backward. Example: 0042
         :return: None
         """
-        current_migration_number = self.__get_current_migration_number(package)
+        current_migration_number = self.database_helper.get_latest_migration_number(package)
 
         if migration_number and migration_number > current_migration_number:
             raise InconsistentParamsException(
@@ -120,18 +118,4 @@ class Api(object):
                 raise IncorrectMigrationFile(u'File %s has no backward function' % migration_python_path)
 
             module.backward(self.database_api)
-            delete_migration_history(self.database_api, name, package)
-
-    def __get_current_migration_number(self, package):
-
-        if not migration_history_exists(self.database_api, self.config):
-            create_history_table(self.database_api, self.config)
-            current_migration_number = 0
-        else:
-            result = get_latest_migration_number(self.database_api, package, self.config)
-            if result:
-                current_migration_number = result
-            else:
-                current_migration_number = 0
-
-        return current_migration_number
+            self.database_helper.delete_migration_history(name, package)
