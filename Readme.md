@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ts-taiye/raw-sql-migrate.svg?branch=master)](https://travis-ci.org/ts-taiye/raw-sql-migrate)
+
 ## Goal
 Raw-sql-migrate is replacement for South migration system without ORM using raw sql. 
 
