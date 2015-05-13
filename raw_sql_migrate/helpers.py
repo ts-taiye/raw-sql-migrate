@@ -64,6 +64,7 @@ def get_migrations_list(package, directory=None):
             result[int(file_name[:DIGITS_IN_MIGRATION_NUMBER])] = file_name
     return result
 
+
 def get_migration_python_path_and_name(name, package):
     migration_module_name = name.strip('.py')
     return '.'.join((package,'migrations', migration_module_name, )), migration_module_name

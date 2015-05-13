@@ -3,11 +3,16 @@
 ## Goal
 Raw-sql-migrate is replacement for South migration system without ORM using raw sql. 
 
+## TODO
+- Write tests.
+- Make database backend support for MySQL, Oracle Database.
+- Make base consistency check.
+
 ## Usage
 In order to use migrate api use should make an instance of Api class found in raw_sql_migrate.api module.
 It receives config instance as required param. There are two ways to get config:
-1. Provide your own instance of Config class found in raw_sql_migrate package
-2. Create raw_sql_migrate.yaml somewhere on your path with next structure:
+- Provide your own instance of Config class found in raw_sql_migrate package
+- Create raw_sql_migrate.yaml somewhere on your path with next structure:
 ```yaml
 database:
     host: database host
