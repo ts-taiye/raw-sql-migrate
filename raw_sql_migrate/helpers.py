@@ -19,6 +19,11 @@ MIGRATION_TEMPLATE = """# encoding: utf-8
 
 # Use database_api execute method to call raw sql query.
 # execute(sql, params=None, return_result=None, commit=True)
+# sql: Raw SQL query
+# params: arguments dict for query
+# return_result: type of query result, constants for it
+#   are located in database_api.CursorResults class. Possible variants: ROWCOUNT, FETCHALL
+# commit: determines whether to commit changes to databases
 
 
 def forward(database_api):

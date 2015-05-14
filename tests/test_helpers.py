@@ -15,7 +15,6 @@ class TestGenerateMigrationName(TestCase):
         name = 'abc'
         self.assertEqual(generate_migration_name(name), '%s_%s.py' % (MIGRATION_NAME_TEMPLATE % 1, name))
 
-
     def test_incorrect_number_given(self):
         name = 'abc'
         self.assertRaises(TypeError, generate_migration_name, name, object())

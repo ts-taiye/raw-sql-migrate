@@ -16,6 +16,11 @@ class DatabaseApi(object):
     password = None
     _connection = None
 
+    class CursorResult(object):
+
+        ROWCOUNT = 'rowcount'
+        FETCHALL = 'fetchall'
+
     def __init__(self, host, port, name, user, password):
         self.host = host
         self.port = port
@@ -48,11 +53,11 @@ class DatabaseApi(object):
 
         with self.connection.cursor() as cursor:
             cursor.execute(sql, params)
-            if not return_result:
+            if return_result is None:
                 result = None
-            elif return_result == 'rowcount':
+            elif return_result == DatabaseApi.CursorResult.ROWCOUNT:
                 result = cursor.rowcount
-            elif return_result == 'fetchall':
+            elif return_result == DatabaseApi.CursorResult.FETCHALL:
                 result = cursor.fetchall()
 
             if commit:
