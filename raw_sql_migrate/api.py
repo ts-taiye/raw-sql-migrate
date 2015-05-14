@@ -32,7 +32,13 @@ class Api(object):
         else:
             self.config = file_config
 
-        self.database_api = DatabaseApi(config.host, config.port, config.name, config.user, config.password)
+        self.database_api = DatabaseApi(
+            self.config.host,
+            self.config.port,
+            self.config.name,
+            self.config.user,
+            self.config.password
+        )
         self.database_helper = DatabaseHelper(self.database_api, self.config.history_table_name)
 
     def create(self, package, name=''):
