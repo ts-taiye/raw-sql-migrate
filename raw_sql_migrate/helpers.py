@@ -90,9 +90,9 @@ class DatabaseHelper(object):
     def migration_history_exists(self):
 
         sql = '''
-        SELECT *
-        FROM information_schema.tables
-        WHERE table_name=%(history_table_name)s
+            SELECT *
+            FROM information_schema.tables
+            WHERE table_name=%(history_table_name)s
         '''
         try:
             result = self.database_api.execute(
@@ -154,3 +154,28 @@ class DatabaseHelper(object):
             WHERE name=%%s and package=%%s
         ''' % self.migration_history_table_name
         self.database_api.execute(sql, params=(name, package, ), return_result=None, commit=True)
+
+    def status(self, package=None):
+        if package:
+            sql = '''
+                SELECT DISTINCT(package), name, processed_at
+                FROM %s
+                WHERE package=%%s
+                ORDER BY processed_at DESC;
+            ''' % self.migration_history_table_name
+            params = (package, )
+        else:
+            sql = '''
+                SELECT DISTINCT(package), name, processed_at
+                FROM %s
+                ORDER BY processed_at DESC;
+            ''' % self.migration_history_table_name
+            params = ()
+
+        rows = self.database_api.execute(
+            sql, params=params, return_result=self.database_api.CursorResult.FETCHALL, commit=False
+        )
+        result = {}
+        for row in rows:
+            result[row[0]] = {'name': row[1], 'processed_at': row[2]}
+        return result

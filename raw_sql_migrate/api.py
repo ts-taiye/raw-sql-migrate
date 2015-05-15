@@ -131,3 +131,6 @@ class Api(object):
 
             module.backward(self.database_api)
             self.database_helper.delete_migration_history(name, package)
+
+    def status(self, package=None):
+        return self.database_helper.status(package)
