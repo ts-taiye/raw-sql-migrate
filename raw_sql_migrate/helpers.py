@@ -5,8 +5,9 @@ import os
 from importlib import import_module
 from psycopg2 import ProgrammingError
 
+from raw_sql_migrate.exceptions import IncorrectPackage
+
 __all__ = (
-    'prepare_package_migration_directory',
     'get_package_migrations_directory',
     'get_migration_python_path_and_name',
     'MIGRATION_NAME_TEMPLATE',
@@ -41,13 +42,18 @@ DIGITS_IN_MIGRATION_NUMBER = 4
 
 
 def get_package_migrations_directory(package):
-    package_module = import_module(package)
+
+    try:
+        package_module = import_module(package)
+    except ImportError:
+        raise IncorrectPackage(u'Failed to import package %s.' % package)
+
     path_to_module = os.path.dirname(package_module.__file__)
     path_to_migrations = os.path.join(path_to_module, 'migrations')
     if not os.path.exists(path_to_migrations):
         os.mkdir(path_to_migrations)
         init_file_path = os.path.join(path_to_migrations, '__init__.py')
-        with open(init_file_path, 'w') as file_descriptor:
+        with open(init_file_path, 'w+') as file_descriptor:
             file_descriptor.write(INIT_FILE_TEMPLATE)
     return path_to_migrations
 

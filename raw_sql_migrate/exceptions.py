@@ -27,3 +27,7 @@ class NoBackwardMigrationsFound(RawSqlMigrateException):
 
 class IncorrectMigrationFile(RawSqlMigrateException):
     pass
+
+
+class IncorrectPackage(RawSqlMigrateException):
+    pass
