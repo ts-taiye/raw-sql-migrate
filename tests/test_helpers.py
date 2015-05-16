@@ -8,7 +8,7 @@ from raw_sql_migrate.exceptions import IncorrectPackage
 from raw_sql_migrate.helpers import (
     generate_migration_name, MIGRATION_NAME_TEMPLATE, MIGRATION_TEMPLATE,
     get_package_migrations_directory, create_migration_file,
-    get_migrations_list,
+    get_migrations_list, get_migration_python_path_and_name,
 )
 
 
@@ -17,7 +17,9 @@ __all__ = (
     'MigrationDirectoryCreationTestCase',
     'MigrationFileCreationTestCase',
     'MigrationListTestCase',
+    'GetMigrationPythonPathAndNameTestCase',
 )
+
 
 
 class GenerateMigrationNameTestCase(BaseTestCase):
@@ -79,5 +81,28 @@ class MigrationListTestCase(BaseTestCase):
 
     def test_all_files_found(self):
         result = get_migrations_list(self.python_path_to_test_package)
-        self.assertTrue(len(result) == 2)
+        self.assertTrue(len(result), len(self.migration_file_names))
 
+    def test_bad_files_are_ignored(self):
+        bad_file_names = ('abc.py', '0001_test.txt', )
+        for file_name in bad_file_names:
+            create_migration_file(self.file_system_test_migrations_path, file_name)
+        result = get_migrations_list(self.python_path_to_test_package)
+        self.assertEqual(len(result), len(self.migration_file_names))
+
+
+class GetMigrationPythonPathAndNameTestCase(BaseTestCase):
+
+    migration_name = '0001_test.py'
+
+    def setUp(self):
+        path = get_package_migrations_directory(self.python_path_to_test_package)
+        create_migration_file(path, self.migration_name)
+
+    def tearDown(self):
+        self._remove_test_migrations_directory()
+
+    def test_correct_result(self):
+        path, name = get_migration_python_path_and_name(self.migration_name, self.python_path_to_test_package)
+        self.assertEqual(name, self.migration_name.replace('.py', ''))
+        self.assertEqual(path, '.'.join((self.python_path_to_test_package, 'migrations', name)))
