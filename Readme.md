@@ -16,6 +16,7 @@ It receives config instance as required param. There are two ways to get config:
 - Create raw_sql_migrate.yaml somewhere on your path with next structure:
 ```yaml
 database:
+    engine: engine backend module
     host: database host
     port: database port
     name: database name
@@ -24,6 +25,9 @@ database:
 
 history_table_name: migration history table name
 ```
+where yet the only available option is:
+- raw_sql_migrate.engines.postgresql_psycopg2
+
 
 ### Creating new migration
 In order to create new migration just call create method:
