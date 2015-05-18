@@ -78,4 +78,4 @@ class MigrateBackwardTestCase(DatabaseTestCase):
     def test_migrate_backward(self):
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
         self.api.backward(self.python_path_to_test_package)
-        self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 0)
+        self.assertEqual(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 0)
