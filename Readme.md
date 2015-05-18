@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/ts-taiye/raw-sql-migrate.svg?branch=master)](https://travis-ci.org/ts-taiye/raw-sql-migrate)
-
 [![Coverage Status](https://coveralls.io/repos/ts-taiye/raw-sql-migrate/badge.svg)](https://coveralls.io/r/ts-taiye/raw-sql-migrate)
 
 ## Goal
