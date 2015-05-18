@@ -21,7 +21,6 @@ __all__ = (
 )
 
 
-
 class GenerateMigrationNameTestCase(BaseTestCase):
 
     def test_positive_case(self):
@@ -34,9 +33,6 @@ class GenerateMigrationNameTestCase(BaseTestCase):
 
 
 class MigrationDirectoryCreationTestCase(BaseTestCase):
-
-    def tearDown(self):
-        self._remove_test_migrations_directory()
 
     def test_directory_created(self):
         path = get_package_migrations_directory(self.python_path_to_test_package)
@@ -55,9 +51,6 @@ class MigrationFileCreationTestCase(BaseTestCase):
     def setUp(self):
         get_package_migrations_directory(self.python_path_to_test_package)
 
-    def tearDown(self):
-        self._remove_test_migrations_directory()
-
     def test_migration_file_is_created(self):
         create_migration_file(self.file_system_test_migrations_path, self.migration_file_name)
         path_to_file = join(self.file_system_test_migrations_path, self.migration_file_name)
@@ -75,9 +68,6 @@ class MigrationListTestCase(BaseTestCase):
         self.migrations_path = get_package_migrations_directory(self.python_path_to_test_package)
         for name in self.migration_file_names:
             create_migration_file(self.migrations_path, name)
-
-    def tearDown(self):
-        self._remove_test_migrations_directory()
 
     def test_all_files_found(self):
         result = get_migrations_list(self.python_path_to_test_package)
@@ -98,9 +88,6 @@ class GetMigrationPythonPathAndNameTestCase(BaseTestCase):
     def setUp(self):
         path = get_package_migrations_directory(self.python_path_to_test_package)
         create_migration_file(path, self.migration_name)
-
-    def tearDown(self):
-        self._remove_test_migrations_directory()
 
     def test_correct_result(self):
         path, name = get_migration_python_path_and_name(self.migration_name, self.python_path_to_test_package)

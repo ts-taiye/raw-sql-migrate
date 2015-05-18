@@ -1,0 +1,8 @@
+database:
+    host: ''
+    port: ''
+    name: rsm_test
+    user: postgres
+    password: ''
+
+history_table_name: migration_history

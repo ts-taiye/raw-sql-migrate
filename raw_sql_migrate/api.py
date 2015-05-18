@@ -6,7 +6,7 @@ from raw_sql_migrate import config as file_config
 from raw_sql_migrate.db import DatabaseApi
 from raw_sql_migrate.exceptions import (
     InconsistentParamsException, NoForwardMigrationsFound, NoBackwardMigrationsFound,
-    IncorrectMigrationFile,
+    IncorrectMigrationFile, ParamRequiredException,
 )
 from raw_sql_migrate.helpers import (
     generate_migration_name, get_package_migrations_directory,
@@ -41,12 +41,18 @@ class Api(object):
         )
         self.database_helper = DatabaseHelper(self.database_api, self.config.history_table_name)
 
-    def create(self, package, name=''):
+    def create(self, package, name):
         """
         :param package: path to package where migration should be created
         :param name: human readable name of migration
         :return: migration name
         """
+        if not package:
+            raise ParamRequiredException(u'Provide correct package where to store migrations')
+
+        if not name:
+            raise ParamRequiredException(u'Provide correct migration name')
+
         if not self.database_helper.migration_history_exists():
             self.database_helper.create_history_table()
             current_migration_number = 0

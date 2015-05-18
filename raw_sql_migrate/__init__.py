@@ -16,9 +16,10 @@ class Config(object):
     password = None
     history_table_name = 'migration_history'
 
-    def init_from_file(self):
-        config_name = 'raw_sql_migrate.yaml'
-        with open(config_name, 'r') as file_stream:
+    def init_from_file(self, path_to_config=None):
+        if not path_to_config:
+            path_to_config = 'raw_sql_migrate.yaml'
+        with open(path_to_config, 'r') as file_stream:
             config_data = load(file_stream, Loader)
         database_settings = config_data['database']
         self.host = database_settings['host']
@@ -27,6 +28,7 @@ class Config(object):
         self.user = database_settings['user']
         self.password = database_settings['password']
         self.history_table_name = config_data['history_table_name']
+        return self
 
 config = Config()
 try:

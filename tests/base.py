@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from os.path import dirname, abspath, join, exists
+from os.path import dirname, abspath, join, exists, realpath
 from shutil import rmtree
 
 from unittest import TestCase
 
+from raw_sql_migrate import Config
+
 
 __all__ = (
     'BaseTestCase',
+    'DatabaseTestCase',
 )
 
 
@@ -21,3 +24,13 @@ class BaseTestCase(TestCase):
     def _remove_test_migrations_directory(self):
         if exists(self.file_system_test_migrations_path):
             rmtree(self.file_system_test_migrations_path)
+
+    def tearDown(self):
+        self._remove_test_migrations_directory()
+
+
+class DatabaseTestCase(BaseTestCase):
+
+    def setUp(self):
+        self.config = Config().init_from_file(join(dirname(realpath(__file__)), 'test_config.yaml'))
+

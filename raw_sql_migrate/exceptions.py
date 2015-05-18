@@ -3,6 +3,7 @@
 __all__ = (
     'RawSqlMigrateException',
     'InconsistentParamsException',
+    'ParamRequiredException',
     'NoForwardMigrationsFound',
     'NoBackwardMigrationsFound',
     'IncorrectMigrationFile',
@@ -14,6 +15,10 @@ class RawSqlMigrateException(Exception):
 
 
 class InconsistentParamsException(RawSqlMigrateException):
+    pass
+
+
+class ParamRequiredException(RawSqlMigrateException):
     pass
 
 
