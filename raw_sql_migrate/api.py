@@ -70,9 +70,9 @@ class Api(object):
         """
         current_migration_number = self.database_helper.get_latest_migration_number(package)
 
-        if migration_number and migration_number < current_migration_number:
+        if migration_number is not None and migration_number < current_migration_number:
             raise InconsistentParamsException(
-                u'Inconsistent params given: migration number cant\'t be less then current.'
+                u'Inconsistent params given: migration number cant\'t be less than current'
             )
 
         if not migration_number:
