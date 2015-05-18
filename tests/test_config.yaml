@@ -1,4 +1,5 @@
 database:
+    engine: raw_sql_migrate.engines.postgresql_psycopg2
     host: ''
     port: ''
     name: rsm_test

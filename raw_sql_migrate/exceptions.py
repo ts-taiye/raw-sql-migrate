@@ -2,6 +2,7 @@
 
 __all__ = (
     'RawSqlMigrateException',
+    'IncorrectDbBackendException',
     'InconsistentParamsException',
     'ParamRequiredException',
     'NoForwardMigrationsFound',
@@ -11,6 +12,9 @@ __all__ = (
 
 
 class RawSqlMigrateException(Exception):
+    pass
+
+class IncorrectDbBackendException(Exception):
     pass
 
 
@@ -36,3 +40,4 @@ class IncorrectMigrationFile(RawSqlMigrateException):
 
 class IncorrectPackage(RawSqlMigrateException):
     pass
+

@@ -1,36 +1,21 @@
 # -*- coding: utf-8 -*-
 
-from psycopg2 import connect
+try:
+    from psycopg2 import connect
+except ImportError:
+    connect = None
+    raise Exception(u'Failed to import psycopg2, ensure you have installed it')
+
+from raw_sql_migrate.engines.base import BaseApi
 
 __all__ = (
     'DatabaseApi',
 )
 
 
-class DatabaseApi(object):
+class DatabaseApi(BaseApi):
 
-    host = None
-    port = None
-    name = None
-    user = None
-    password = None
-    _connection = None
-
-    class CursorResult(object):
-
-        ROWCOUNT = 'rowcount'
-        FETCHALL = 'fetchall'
-
-    def __init__(self, host, port, name, user, password):
-        self.host = host
-        self.port = port
-        self.name = name
-        self.user = user
-        self.password = password
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._connection:
-            self._connection.close()
+    engine = __name__
 
     @property
     def connection(self):

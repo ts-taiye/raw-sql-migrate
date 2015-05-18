@@ -57,5 +57,3 @@ Each migration is executed in separate transaction which will be
 commited after all python code in forward or backward is executed.
 Still you can commit transaction yourself. Just pass commit=True to
 execute method of database api.
-
-

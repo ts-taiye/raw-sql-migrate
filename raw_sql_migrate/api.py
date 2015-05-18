@@ -3,10 +3,9 @@
 from importlib import import_module
 
 from raw_sql_migrate import config as file_config
-from raw_sql_migrate.db import DatabaseApi
 from raw_sql_migrate.exceptions import (
     InconsistentParamsException, NoForwardMigrationsFound, NoBackwardMigrationsFound,
-    IncorrectMigrationFile, ParamRequiredException,
+    IncorrectMigrationFile, ParamRequiredException, IncorrectDbBackendException,
 )
 from raw_sql_migrate.helpers import (
     generate_migration_name, get_package_migrations_directory,
@@ -32,13 +31,18 @@ class Api(object):
         else:
             self.config = file_config
 
-        self.database_api = DatabaseApi(
-            self.config.host,
-            self.config.port,
-            self.config.name,
-            self.config.user,
-            self.config.password
-        )
+        try:
+            database_api_module = import_module(self.config.engine)
+            self.database_api = database_api_module.DatabaseApi(
+                self.config.host,
+                self.config.port,
+                self.config.name,
+                self.config.user,
+                self.config.password
+            )
+        except (ImportError, AttributeError, ):
+            raise IncorrectDbBackendException(u'Failed to import given database engine: %s' % self.config.engine)
+
         self.database_helper = DatabaseHelper(self.database_api, self.config.history_table_name)
 
     def create(self, package, name):

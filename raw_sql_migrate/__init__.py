@@ -9,6 +9,7 @@ except ImportError:
 
 class Config(object):
 
+    engine = None
     host = None
     port = None
     name = None
@@ -22,6 +23,7 @@ class Config(object):
         with open(path_to_config, 'r') as file_stream:
             config_data = load(file_stream, Loader)
         database_settings = config_data['database']
+        self.engine = database_settings['engine']
         self.host = database_settings['host']
         self.port = database_settings['port']
         self.name = database_settings['name']
