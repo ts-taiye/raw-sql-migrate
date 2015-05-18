@@ -7,7 +7,10 @@ addons:
 install:
     - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then travis_retry pip install importlib; fi
     - pip install -r requirements.txt
+    - pip install coveralls
 before_script:
   - psql -c 'create database rsm_test;' -U postgres
 script:
-    nosetests
+    nosetests --with-coverage --cover-package=raw_sql_migrate
+after_success:
+  - coveralls
