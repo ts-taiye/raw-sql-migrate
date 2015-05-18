@@ -146,6 +146,15 @@ class DatabaseHelper(object):
             sql, params=(self.migration_history_table_name, ), return_result=None, commit=True
         )
 
+    def drop_history_table(self):
+
+        sql = '''
+            DROP TABLE %s;
+        ''' % self.migration_history_table_name
+        self.database_api.execute(
+            sql, params=(self.migration_history_table_name, ), return_result=None, commit=True
+        )
+
     def write_migration_history(self, name, package):
 
         sql = '''
