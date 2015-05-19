@@ -6,7 +6,7 @@ Raw-sql-migrate is replacement for South migration system without ORM using raw 
 
 ## TODO
 - Write tests.
-- Make database backend support for MySQL, Oracle Database.
+- Make database backend support for Oracle Database.
 - Make base consistency check.
 
 ## Usage
@@ -27,6 +27,7 @@ history_table_name: migration history table name
 ```
 where yet the only available option is:
 - raw_sql_migrate.engines.postgresql_psycopg2
+- raw_sql_migrate.engines.mysql
 
 
 ### Creating new migration
