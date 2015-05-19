@@ -3,7 +3,6 @@
 import os
 
 from importlib import import_module
-from psycopg2 import ProgrammingError
 
 from raw_sql_migrate.exceptions import IncorrectPackage
 
@@ -100,15 +99,13 @@ class DatabaseHelper(object):
             FROM information_schema.tables
             WHERE table_name=%(history_table_name)s
         '''
-        try:
-            result = self.database_api.execute(
-                sql,
-                params={'history_table_name': self.migration_history_table_name},
-                return_result='rowcount',
-                commit=False
-            )
-        except ProgrammingError:
-            result = None
+
+        result = self.database_api.execute(
+            sql,
+            params={'history_table_name': self.migration_history_table_name},
+            return_result='rowcount',
+            commit=False
+        )
 
         return True if result else False
 
@@ -143,7 +140,7 @@ class DatabaseHelper(object):
             );
         ''' % self.migration_history_table_name
         self.database_api.execute(
-            sql, params=(self.migration_history_table_name, ), return_result=None, commit=True
+            sql, params=(), return_result=None, commit=True
         )
 
     def drop_history_table(self):

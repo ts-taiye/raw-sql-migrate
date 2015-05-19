@@ -4,13 +4,24 @@ python:
     - 2.7
 addons:
   postgresql: "9.3"
+
+env:
+    - DB=postgresql
+    - DB=mysql
+
 install:
-    - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then travis_retry pip install importlib; fi
+    - if [[ $TRAVIS_PYTHON_VERSION == "2.6" ]]; then travis_retry pip install importlib; fi
+    - if [[ $DB == "postgresql" ]]; then travis_retry pip install psycopg2; fi
+    - if [[ $DB == "mysql" ]]; then travis_retry pip install MySQL-python; fi
     - pip install -r requirements.txt
     - pip install coveralls
+
 before_script:
-  - psql -c 'create database rsm_test;' -U postgres
+    - if [[ $DB == "postgresql" ]]; then psql -c "create database rsm_test;" -U postgres; cp tests/postgresql.yaml tests/config.yaml; fi
+    - if [[ $DB == "mysql" ]]; then mysql -e "create database rsm_test;" -uroot; cp tests/mysql.yaml tests/config.yaml; fi
+
 script:
     nosetests --with-coverage --cover-package=raw_sql_migrate
+
 after_success:
-  - coveralls
+    - coveralls

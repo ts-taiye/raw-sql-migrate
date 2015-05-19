@@ -35,5 +35,5 @@ class BaseTestCase(TestCase):
 class DatabaseTestCase(BaseTestCase):
 
     def setUp(self):
-        self.config = Config().init_from_file(join(dirname(realpath(__file__)), 'test_config.yaml'))
+        self.config = Config().init_from_file(join(dirname(realpath(__file__)), 'config.yaml'))
         self.api = Api(self.config)
