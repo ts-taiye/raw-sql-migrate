@@ -4,16 +4,19 @@
 ## Goal
 Raw-sql-migrate is replacement for South migration system without ORM using raw sql. 
 
+
+## Docs
+See [ReadTheDocs](http://rsm.readthedocs.org/en/latest/)  page for full docs.
+
+
 ## TODO
 - Write tests.
 - Make database backend support for Oracle Database.
 - Make base consistency check.
 
-## Usage
-In order to use migrate api use should make an instance of Api class found in raw_sql_migrate.api module.
-It receives config instance as required param. There are two ways to get config:
-- Provide your own instance of Config class found in raw_sql_migrate package
-- Create raw_sql_migrate.yaml somewhere on your path with next structure:
+
+## Short guide
+1. Create raw_sql_migrate.yaml in your project dir with next structure:
 ```yaml
 database:
     engine: engine backend module
@@ -22,43 +25,52 @@ database:
     name: database name
     user: user name
     password: user password
-
 history_table_name: migration history table name
 ```
-where yet the only available option is:
-- raw_sql_migrate.engines.postgresql_psycopg2
-- raw_sql_migrate.engines.mysql
 
-
-### Creating new migration
-In order to create new migration just call create method:
+2. Import and make instance of Api:
 ```python
-api.create(package='package_a.package_b', name='initial')
+from raw_sql_migrate.api import Api
+api = Api()
 ```
-Calling of it will create new migrations history table,
-migrations directory in the package and py migration file
 
-### Migrating forward
-In order to migrate forward call
+3. Create first migration
 ```python
-api.forward(package, migration_number=42)
+api.create('package_a.package_b', name='initial')
 ```
-Note: to migrate all not applied migrations you should skip migration_number param.
 
-### Migrating backward
-In order to migrate forward call
+4. Edit migration file found package_a/package_b/migrations/0001_initial.py. Example:
 ```python
-api.backward(package, migration_number=1)
+def forward(database_api):
+    result = database_api.execute(
+        sql='''
+        CREATE TABLE test (
+           id INT PRIMARY KEY NOT NULL,
+           test_value BIGINT NOT NULL,
+        );
+        CREATE INDEX test_value_index ON account_points_history(test_value);
+        ''',
+        params={},
+        return_result=None,
+        commit=True
+    )
+def backward(database_api):
+    database_api.execute(
+        sql='''
+        DROP TABLE test;
+        ''',
+        params={},
+        return_result=None,
+        commit=True
+    )
 ```
-Note: to migrate to zero state you should pass migration_number as 0.
 
-## Migration file
-Migration file is usual python file with two predefined functions:
-forward and backward. Database api instance is passed to them.
-In order to use call raw sql command just call database_api.execute method.
+5. Run migrations:
+```python
+api.forward('package_a.package_b')
+```
 
-## Transaction control
-Each migration is executed in separate transaction which will be 
-commited after all python code in forward or backward is executed.
-Still you can commit transaction yourself. Just pass commit=True to
-execute method of database api.
+6. Migrating backwards:
+```python
+api.backward('package_a.package_b')
+```
