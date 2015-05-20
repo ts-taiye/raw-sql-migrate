@@ -58,3 +58,6 @@ target/
 
 # Database config
 tests/config.yaml
+
+# PyCharm
+.idea
