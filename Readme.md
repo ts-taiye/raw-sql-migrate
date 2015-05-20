@@ -16,7 +16,7 @@ See [ReadTheDocs](http://rsm.readthedocs.org/en/latest/)  page for full docs.
 
 
 ## Short guide
-1. Create raw_sql_migrate.yaml in your project dir with next structure:
+- Create raw_sql_migrate.yaml in your project dir with next structure:
 ```yaml
 database:
     engine: engine backend module
@@ -27,28 +27,25 @@ database:
     password: user password
 history_table_name: migration history table name
 ```
-
-2. Import and make instance of Api:
+- Import and make instance of Api:
 ```python
 from raw_sql_migrate.api import Api
 api = Api()
 ```
-
-3. Create first migration
+- Create first migration
 ```python
 api.create('package_a.package_b', name='initial')
 ```
-
-4. Edit migration file found package_a/package_b/migrations/0001_initial.py. Example:
+- Edit migration file found package_a/package_b/migrations/0001_initial.py. Example:
 ```python
 def forward(database_api):
-    result = database_api.execute(
+    database_api.execute(
         sql='''
         CREATE TABLE test (
            id INT PRIMARY KEY NOT NULL,
            test_value BIGINT NOT NULL,
         );
-        CREATE INDEX test_value_index ON account_points_history(test_value);
+        CREATE INDEX test_value_index ON test(test_value);
         ''',
         params={},
         return_result=None,
@@ -64,13 +61,11 @@ def backward(database_api):
         commit=True
     )
 ```
-
-5. Run migrations:
+- Run migrations:
 ```python
 api.forward('package_a.package_b')
 ```
-
-6. Migrating backwards:
+- Migrating backwards:
 ```python
 api.backward('package_a.package_b')
 ```
