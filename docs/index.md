@@ -2,11 +2,21 @@
 Raw-sql-migrate is replacement for South migration system without ORM using raw sql. 
 
 
-## Usage
-In order to use migrate api use should make an instance of Api class found in raw_sql_migrate.api module.
-It receives config instance as required param. There are two ways to get config:
-- Provide your own instance of Config class found in raw_sql_migrate package
-- Create raw_sql_migrate.yaml somewhere on your path with next structure:
+## Config
+In order to use migrate api use should make an instance of Config class found in raw_sql_migrate package.
+By default one config instance is created in raw_sql_migrate.__init__.py module which try to load options
+from raw_sql_migrate.yaml in your project root. Still you can create config based on yaml file located in 
+another directory. To do it:
+```python
+from raw_sql_migrate import Config
+config = Config().init_from_file(path_to_file)
+```
+Or you can just pass all params to constructor:
+```python
+from raw_sql_migrate import Config
+config = Config(**params)
+```
+where params are mappings to yaml config structure:
 ```yaml
 database:
     engine: engine backend module
@@ -18,9 +28,15 @@ database:
 
 history_table_name: migration history table name
 ```
-where yet the only available option is:
-- raw_sql_migrate.engines.postgresql_psycopg2
-- raw_sql_migrate.engines.mysql
+where available options are:
+- raw_sql_migrate.engines.postgresql_psycopg2 (requires psycopg2 package)
+- raw_sql_migrate.engines.mysql (requires MySQLdb-python package)
+
+
+## Api
+In order to create and run migrations you need to make instance of Api class from
+raw_sql_migrate.api module and pass config instance if needed. Otherwise default config
+will be used.
 
 
 ### Creating new migration
