@@ -13,6 +13,7 @@ class BaseApi(object):
     name = None
     user = None
     password = None
+    additional_connection_params = {}
     _connection = None
 
     class CursorResult(object):
@@ -20,12 +21,13 @@ class BaseApi(object):
         ROWCOUNT = 'rowcount'
         FETCHALL = 'fetchall'
 
-    def __init__(self, host, port, name, user, password):
+    def __init__(self, host, port, name, user, password, additional_connection_params):
         self.host = host
         self.port = port
         self.name = name
         self.user = user
         self.password = password
+        self.additional_connection_params = additional_connection_params
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._connection:

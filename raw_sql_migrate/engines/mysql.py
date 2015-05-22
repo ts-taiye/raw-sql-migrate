@@ -29,7 +29,8 @@ class DatabaseApi(BaseApi):
                 user=self.user,
                 passwd=self.password,
                 port=port,
-                host=self.host
+                host=self.host,
+                **self.additional_connection_params
             )
         return self._connection
 

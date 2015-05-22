@@ -14,7 +14,7 @@ config = Config().init_from_file(path_to_file)
 Or you can just pass all params to constructor:
 ```python
 from raw_sql_migrate import Config
-config = Config(**params)
+config = Config(database, history_table_name)
 ```
 where params are mappings to yaml config structure:
 ```yaml
@@ -25,12 +25,14 @@ database:
     name: database name
     user: user name
     password: user password
-
+    additional_driver_param1: value
+    additional_driver_param2: value
 history_table_name: migration history table name
 ```
 where available options are:
 - raw_sql_migrate.engines.postgresql_psycopg2 (requires psycopg2 package)
 - raw_sql_migrate.engines.mysql (requires MySQLdb-python package)
+Also you can pass specific param to drivers connect method, just add this param in database section.
 
 
 ## Api
