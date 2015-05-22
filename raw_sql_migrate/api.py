@@ -38,7 +38,8 @@ class Api(object):
                 self.config.port,
                 self.config.name,
                 self.config.user,
-                self.config.password
+                self.config.password,
+                self.config.additional_connection_params
             )
         except (ImportError, AttributeError, ):
             raise IncorrectDbBackendException(u'Failed to import given database engine: %s' % self.config.engine)
