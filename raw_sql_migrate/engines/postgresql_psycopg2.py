@@ -33,7 +33,13 @@ class DatabaseApi(BaseApi):
             )
         return self._connection
 
-    def execute(self, sql, params=None, return_result=None, commit=True):
+    def rollback(self):
+        self.connection.rollback()
+
+    def commit(self):
+        self.connection.commit()
+
+    def execute(self, sql, params=None, return_result=None):
 
         if not params:
             params = {}
@@ -48,8 +54,5 @@ class DatabaseApi(BaseApi):
                 result = cursor.rowcount
             elif return_result == DatabaseApi.CursorResult.FETCHALL:
                 result = cursor.fetchall()
-
-            if commit:
-                self.connection.commit()
 
         return result

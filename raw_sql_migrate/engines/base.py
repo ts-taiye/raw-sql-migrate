@@ -37,5 +37,11 @@ class BaseApi(object):
     def connection(self):
         raise NotImplementedError()
 
+    def rollback(self):
+        raise NotImplementedError()
+
+    def commit(self):
+        raise NotImplementedError()
+
     def execute(self, sql, params=None, return_result=None, commit=True):
         raise NotImplementedError()

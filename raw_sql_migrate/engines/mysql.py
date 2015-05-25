@@ -34,6 +34,12 @@ class DatabaseApi(BaseApi):
             )
         return self._connection
 
+    def rollback(self):
+        self.connection.rollback()
+
+    def commit(self):
+        self.connection.commit()
+
     def execute(self, sql, params=None, return_result=None, commit=True):
 
         if not params:

@@ -49,6 +49,7 @@ api.create(package='package_a.package_b', name='initial')
 Calling of it will create new migrations history table,
 migrations directory in the package and py migration file
 
+
 ### Migrating forward
 In order to migrate forward call
 ```python

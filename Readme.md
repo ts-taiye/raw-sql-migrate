@@ -49,8 +49,8 @@ def forward(database_api):
         ''',
         params={},
         return_result=None,
-        commit=True
     )
+    database_api.commit()
 def backward(database_api):
     database_api.execute(
         sql='''
@@ -58,8 +58,8 @@ def backward(database_api):
         ''',
         params={},
         return_result=None,
-        commit=True
     )
+    database_api.commit()
 ```
 - Run migrations:
 ```python

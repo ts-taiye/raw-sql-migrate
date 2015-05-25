@@ -18,12 +18,12 @@ MIGRATION_NAME_TEMPLATE = '%04d'
 MIGRATION_TEMPLATE = """# encoding: utf-8
 
 # Use database_api execute method to call raw sql query.
-# execute(sql, params=None, return_result=None, commit=True)
-# sql: Raw SQL query
-# params: arguments dict for query
-# return_result: type of query result, constants for it
-#   are located in database_api.CursorResults class. Possible variants: ROWCOUNT, FETCHALL
-# commit: determines whether to commit changes to databases
+# execute(sql, params=None, return_result=None)
+#   sql: Raw SQL query
+#   params: arguments dict for query
+#   return_result: type of query result, constants for it
+#       are located in database_api.CursorResults class. Possible variants: ROWCOUNT, FETCHALL
+# Call database_api.commit() or database_api.rollback() to commit or rollback changes
 
 
 def forward(database_api):
@@ -104,7 +104,6 @@ class DatabaseHelper(object):
             sql,
             params={'history_table_name': self.migration_history_table_name},
             return_result='rowcount',
-            commit=False
         )
 
         return True if result else False
@@ -122,7 +121,7 @@ class DatabaseHelper(object):
             ''' % self.migration_history_table_name
             query_params = (package, )
 
-            rows = self.database_api.execute(sql, params=query_params, return_result='fetchall', commit=False)
+            rows = self.database_api.execute(sql, params=query_params, return_result='fetchall')
             if rows:
                 name = rows[0][0]
                 result = int(name.split('_')[0].strip('0'))
@@ -140,8 +139,9 @@ class DatabaseHelper(object):
             );
         ''' % self.migration_history_table_name
         self.database_api.execute(
-            sql, params=(), return_result=None, commit=True
+            sql, params=(), return_result=None
         )
+        self.database_api.commit()
 
     def drop_history_table(self):
 
@@ -149,8 +149,9 @@ class DatabaseHelper(object):
             DROP TABLE %s;
         ''' % self.migration_history_table_name
         self.database_api.execute(
-            sql, params=(self.migration_history_table_name, ), return_result=None, commit=True
+            sql, params=(self.migration_history_table_name, ), return_result=None
         )
+        self.database_api.commit()
 
     def write_migration_history(self, name, package):
 
@@ -158,14 +159,16 @@ class DatabaseHelper(object):
             INSERT INTO %s(name, package)
             VALUES (%%s, %%s);
         ''' % self.migration_history_table_name
-        self.database_api.execute(sql, params=(name, package, ), return_result=None, commit=True)
+        self.database_api.execute(sql, params=(name, package, ), return_result=None)
+        self.database_api.commit()
 
     def delete_migration_history(self, name, package):
         sql = '''
             DELETE FROM %s
             WHERE name=%%s and package=%%s
         ''' % self.migration_history_table_name
-        self.database_api.execute(sql, params=(name, package, ), return_result=None, commit=True)
+        self.database_api.execute(sql, params=(name, package, ), return_result=None)
+        self.database_api.commit()
 
     def status(self, package=None):
         if package:
@@ -185,7 +188,7 @@ class DatabaseHelper(object):
             params = ()
 
         rows = self.database_api.execute(
-            sql, params=params, return_result=self.database_api.CursorResult.FETCHALL, commit=False
+            sql, params=params, return_result=self.database_api.CursorResult.FETCHALL
         )
         result = {}
         for row in rows:
