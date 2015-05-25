@@ -8,7 +8,7 @@ setup(
     name='raw-sql-migrate',
     version=__version__,
     maintainer_email='ts.taiye@live.com',
-    description='Simple tool for managing raw sql migrations for Postgres',
+    description='Simple tool for managing raw sql migrations.',
     long_description=open('Readme.md').read(),
     packages=find_packages(),
     include_package_data=True,
@@ -17,13 +17,14 @@ setup(
         'PyYAML',
     ],
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
-        'License :: Other/Proprietary License',
+        'Natural Language :: English',
+        'License :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.x',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        ]
+    ]
 )
