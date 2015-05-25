@@ -21,7 +21,7 @@ setup(
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'Natural Language :: English',
-        'License :: BSD License',
+        'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.x',
