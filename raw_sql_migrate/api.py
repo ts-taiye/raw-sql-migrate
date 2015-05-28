@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from sys import stdout
+
 from importlib import import_module
 
 from raw_sql_migrate import config as file_config
@@ -100,7 +102,7 @@ class Api(object):
             module = import_module(migration_python_path)
             if not hasattr(module, 'forward'):
                 raise IncorrectMigrationFile(u'File %s has no forward function' % migration_python_path)
-
+            stdout.write('Migrating forward to migration %s\n' % name)
             module.forward(self.database_api)
             self.database_helper.write_migration_history(name, package)
 
@@ -139,7 +141,7 @@ class Api(object):
             module = import_module(migration_python_path)
             if not hasattr(module, 'backward'):
                 raise IncorrectMigrationFile(u'File %s has no backward function' % migration_python_path)
-
+            stdout.write('Downgrading from migration %s\n' % name)
             module.backward(self.database_api)
             self.database_helper.delete_migration_history(name, package)
 

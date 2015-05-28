@@ -15,7 +15,7 @@ __all__ = (
 )
 
 MIGRATION_NAME_TEMPLATE = '%04d'
-MIGRATION_TEMPLATE = """# encoding: utf-8
+MIGRATION_TEMPLATE = """# -*- coding: utf-8 -*-
 
 # Use database_api execute method to call raw sql query.
 # execute(sql, params=None, return_result=None)
