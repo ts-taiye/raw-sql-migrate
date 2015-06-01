@@ -98,6 +98,4 @@ class SquashTestCase(DatabaseTestCase):
         self.api.squash(self.python_path_to_test_package, begin_from=1)
         migrations = get_migrations_list(self.python_path_to_test_package)
         self.assertEqual(len(migrations), 1)
-        self.assertIsNotNone(migrations.get(1))
-
-
+        self.assertTrue(migrations.get(1) is not None)
