@@ -7,8 +7,9 @@ from tests.base import BaseTestCase
 from raw_sql_migrate.exceptions import IncorrectPackage
 from raw_sql_migrate.helpers import (
     generate_migration_name, MIGRATION_NAME_TEMPLATE, MIGRATION_TEMPLATE,
-    get_package_migrations_directory, create_migration_file,
+    PASS_LINE, get_package_migrations_directory, create_migration_file,
     get_migrations_list, get_migration_python_path_and_name,
+    get_empty_migration_file_content,
 )
 
 
@@ -51,13 +52,16 @@ class MigrationFileCreationTestCase(BaseTestCase):
     def setUp(self):
         get_package_migrations_directory(self.python_path_to_test_package)
 
+    def test_empty_migration_file_content(self):
+        self.assertEqual(get_empty_migration_file_content(), MIGRATION_TEMPLATE % (PASS_LINE, PASS_LINE, ))
+
     def test_migration_file_is_created(self):
         create_migration_file(self.file_system_test_migrations_path, self.migration_file_name)
         path_to_file = join(self.file_system_test_migrations_path, self.migration_file_name)
         self.assertTrue(exists(path_to_file))
         with open(path_to_file, 'r') as file_descriptor:
             content = file_descriptor.read()
-        self.assertEqual(MIGRATION_TEMPLATE, content)
+        self.assertEqual(get_empty_migration_file_content(), content)
 
 
 class MigrationListTestCase(BaseTestCase):

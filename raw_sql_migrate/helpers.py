@@ -4,17 +4,23 @@ import os
 
 from importlib import import_module
 
-from raw_sql_migrate.exceptions import IncorrectPackage
+from raw_sql_migrate.exceptions import IncorrectPackage, IncorrectMigrationFile
 
 __all__ = (
     'get_package_migrations_directory',
+    'get_file_system_latest_migration_number',
     'get_migration_python_path_and_name',
+    'get_empty_migration_file_content',
+    'create_migration_file',
+    'get_migration_file_content',
+    'create_squashed_migration_file',
     'MIGRATION_NAME_TEMPLATE',
     'MIGRATION_TEMPLATE',
     'DatabaseHelper',
 )
 
 MIGRATION_NAME_TEMPLATE = '%04d'
+PASS_LINE = '    pass'
 MIGRATION_TEMPLATE = """# -*- coding: utf-8 -*-
 
 # Use database_api execute method to call raw sql query.
@@ -27,11 +33,11 @@ MIGRATION_TEMPLATE = """# -*- coding: utf-8 -*-
 
 
 def forward(database_api):
-    pass
+%s
 
 
 def backward(database_api):
-    pass
+%s
 
 """
 INIT_FILE_TEMPLATE = """# encoding: utf-8
@@ -57,15 +63,25 @@ def get_package_migrations_directory(package):
     return path_to_migrations
 
 
-def generate_migration_name(name=None, current_number=0):
-    prefix = MIGRATION_NAME_TEMPLATE % (current_number + 1)
+def generate_migration_name(name=None, current_number=1):
+    prefix = MIGRATION_NAME_TEMPLATE % current_number
     return prefix if not name else '%s_%s.py' % (prefix, name, )
+
+
+def get_empty_migration_file_content():
+    return MIGRATION_TEMPLATE % (PASS_LINE, PASS_LINE, )
 
 
 def create_migration_file(path_to_migrations, name):
     migration_file_path = os.path.join(path_to_migrations, name)
     with open(migration_file_path, 'w') as file_descriptor:
-        file_descriptor.write(MIGRATION_TEMPLATE)
+        file_descriptor.write(get_empty_migration_file_content())
+
+
+def create_squashed_migration_file(path_to_migrations, name, forward_content, backward_content):
+    migration_file_path = os.path.join(path_to_migrations, name)
+    with open(migration_file_path, 'w') as file_descriptor:
+        file_descriptor.write(MIGRATION_TEMPLATE % (forward_content, backward_content, ))
 
 
 def get_migrations_list(package, directory=None):
@@ -74,13 +90,49 @@ def get_migrations_list(package, directory=None):
     result = {}
     for file_name in os.listdir(directory):
         if file_name[DIGITS_IN_MIGRATION_NUMBER] == '_' and file_name.endswith('.py'):
-            result[int(file_name[:DIGITS_IN_MIGRATION_NUMBER])] = file_name
+            result[int(file_name[:DIGITS_IN_MIGRATION_NUMBER])] = {
+                'file_name': file_name,
+                'file_path': os.path.join(directory, file_name),
+                'file_directory': directory,
+            }
     return result
+
+
+def get_file_system_latest_migration_number(package):
+    data = get_migrations_list(package)
+    if not data:
+        return 0
+    number = sorted(data.keys())[-1]
+    return number
 
 
 def get_migration_python_path_and_name(name, package):
     migration_module_name = name.strip('.py')
-    return '.'.join((package,'migrations', migration_module_name, )), migration_module_name
+    return '.'.join((package, 'migrations', migration_module_name, )), migration_module_name
+
+
+def get_migration_file_content(file_path):
+    with open(file_path, 'r') as descriptor:
+        lines = [line for line in descriptor]
+
+    forward_start_index = None
+    forward_end_index = None
+    backward_start_index = None
+    backward_end_index = lines.index(lines[-1])
+
+    for line in lines:
+        if 'def forward(' in line:
+            forward_start_index = lines.index(line) + 1
+        elif 'def backward(' in line:
+            forward_end_index = lines.index(line) - 1
+            backward_start_index = lines.index(line) + 1
+    if forward_start_index is None or forward_end_index is None or backward_start_index is None:
+        raise IncorrectMigrationFile('Incorrect migration file found: %s' % file_path)
+
+    return (
+        str(lines[forward_start_index:forward_end_index]),
+        str(lines[backward_start_index:backward_end_index]),
+    )
 
 
 class DatabaseHelper(object):

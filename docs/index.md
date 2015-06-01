@@ -81,13 +81,28 @@ The result of this method is python dictionary:
 }
 ```
 
+### Squashing migrations
+Sometimes there can be situation when you want to merge your dev migrations before
+publishing them to repository. In this case use squash method:
+```python
+api.squash(package='package_a.package_b', begin_from=42, name='squashed_migration')
+```
+This example does next things:
+It searches for not applied migration in package begining from number 42, reads their
+content and appends it to result forward and backward functions. After all migrations
+were processed command writes new migration file with 'begin_from' number and renames
+squashed migrations with '_squashed' prefix. Note that command can't squash already
+applied migrations.
+
+
 ## Migration file
 Migration file is usual python file with two predefined functions:
 forward and backward. Database api instance is passed to them.
 In order to use call raw sql command just call database_api.execute method.
 
+
 ## Transaction control
-Each migration is executed in separate transaction which will be 
-commited after all python code in forward or backward is executed.
-Still you can commit transaction yourself. Just pass commit=True to
-execute method of database api.
+Commiting migration changes is left to user. In order to commit migration changes write:
+```python
+database_api.commit()
+```

@@ -34,11 +34,11 @@ class GenerateMigrationNameTestCase(DatabaseTestCase):
         self.assertRaises(ParamRequiredException, self.api.create, '', 'test')
         self.assertRaises(ParamRequiredException, self.api.create, self.python_path_to_test_package, '')
 
-    def test_migration_already_exists(self):
+    def test_created_next(self):
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
         migration_list = get_migrations_list(self.python_path_to_test_package)
-        self.assertEqual(len(migration_list), 1)
+        self.assertEqual(len(migration_list), 2)
 
     def test_history_table_created(self):
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
@@ -79,3 +79,25 @@ class MigrateBackwardTestCase(DatabaseTestCase):
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
         self.api.backward(self.python_path_to_test_package)
         self.assertEqual(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 0)
+
+
+class SquashTestCase(DatabaseTestCase):
+
+    def setUp(self):
+        super(SquashTestCase, self).setUp()
+
+    def tearDown(self):
+        super(SquashTestCase, self).tearDown()
+
+    def test_simple_squash(self):
+        for name in ('test1', 'test2', 'test3'):
+            self.api.create(self.python_path_to_test_package, name)
+
+        migrations = get_migrations_list(self.python_path_to_test_package)
+        self.assertEqual(len(migrations), 3)
+        self.api.squash(self.python_path_to_test_package, begin_from=1)
+        migrations = get_migrations_list(self.python_path_to_test_package)
+        self.assertEqual(len(migrations), 1)
+        self.assertIsNotNone(migrations.get(1))
+
+
