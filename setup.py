@@ -9,7 +9,7 @@ setup(
     version=__version__,
     maintainer_email='ts.taiye@live.com',
     description='Simple tool for managing raw sql migrations scripts.',
-    long_description=open('Readme.md').read(),
+    long_description=open('README.rst').read(),
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
