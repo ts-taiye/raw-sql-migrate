@@ -7,6 +7,9 @@ __version__ = '0.1'
 setup(
     name='raw-sql-migrate',
     version=__version__,
+    url='https://github.com/ts-taiye/raw-sql-migrate',
+    author='ts.taiye aka Vadim Tsander',
+    author_email='ts.taiye@live.com',
     maintainer_email='ts.taiye@live.com',
     description='Simple tool for managing raw sql migrations scripts.',
     long_description=open('README.rst').read(),
