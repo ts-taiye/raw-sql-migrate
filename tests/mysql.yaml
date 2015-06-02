@@ -5,5 +5,6 @@ database:
     name: rsm_test
     user: root
     password: ''
-
 history_table_name: migration_history
+packages:
+    - tests.test_package

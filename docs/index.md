@@ -4,7 +4,7 @@ Raw-sql-migrate is replacement for South migration system without ORM using raw 
 
 ## Config
 In order to use migrate api use should make an instance of Config class found in raw_sql_migrate package.
-By default one config instance is created in init module which tries to load options
+By default one config instance is created in init module which tries to load options data
 from raw_sql_migrate.yaml in your project root. Still you can create config based on yaml file located in 
 another directory. Usage:
 ```python
@@ -28,12 +28,17 @@ database:
     additional_driver_param1: value
     additional_driver_param2: value
 history_table_name: migration history table name
+packages:
+    - package_a
+    - package_b
+    - package_c.package_d
 ```
 where available options are:
 * raw_sql_migrate.engines.postgresql_psycopg2 (requires psycopg2 package)
 * raw_sql_migrate.engines.mysql (requires MySQLdb-python package)
 
 Also you can pass specific param to drivers connect method, just add this param in database section.
+Packages param is a list of packages where to search for new migration for api.forward command.
 
 
 ## Api

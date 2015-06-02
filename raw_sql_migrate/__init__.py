@@ -16,10 +16,11 @@ class Config(object):
     user = None
     password = None
     additional_connection_params = {}
+    packages = []
     history_table_name = 'migration_history'
     general_connection_params = set(('engine', 'host', 'port', 'name', 'user', 'password', ))
 
-    def __init__(self, database=None, history_table_name=None):
+    def __init__(self, database=None, history_table_name=None, packages=None):
         if database and type(database) == dict:
             self.engine = database.get('engine')
             self.host = database.get('host')
@@ -33,6 +34,9 @@ class Config(object):
             if additional_connection_params:
                 self.additional_connection_params = additional_connection_params
 
+        if packages:
+            self.packages = packages
+
         if history_table_name:
             self.history_table_name = history_table_name
 
@@ -43,7 +47,8 @@ class Config(object):
             config_data = load(file_stream, Loader)
         database_settings = config_data.get('database')
         history_table_name = config_data.get('history_table_name')
-        self.__init__(database_settings, history_table_name)
+        packages = config_data.get('packages')
+        self.__init__(database_settings, history_table_name, packages)
         return self
 
 config = Config()

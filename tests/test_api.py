@@ -64,6 +64,10 @@ class MigrateForwardTestCase(DatabaseTestCase):
         self.api.forward(self.python_path_to_test_package)
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
 
+    def test_forward_from_packages_config_section(self):
+        self.api.forward()
+        self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
+
 
 class MigrateBackwardTestCase(DatabaseTestCase):
 

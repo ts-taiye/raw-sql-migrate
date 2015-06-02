@@ -75,47 +75,63 @@ class Api(object):
         migration_name = generate_migration_name(name, current_migration_number + 1)
         create_migration_file(path_to_migrations, migration_name)
 
-    def forward(self, package, migration_number=None):
+    def forward(self, package=None, migration_number=None):
         """
         Searches for not applied migrations and applies them. If migration number is left None
         applies all new migrations.
-        :param package: path to package which migrations should be applied
+        :param package: path to package which migrations should be applied, omit to migrate all packages in config.
         :param migration_number: number of migration to migrate to.
         :return: None
-        :raises InconsistentParamsException: raises if migration number is less than current migration number.
+        :raises InconsistentParamsException: raises if migration number is less than current migration number or
+        package or packages list in config are not specified.
         :raises NoForwardMigrationsFound: raises if no new migrations found
         :raises IncorrectMigrationFile: raises if no forward function is found in migration file
         """
-        current_migration_number = self.database_helper.get_latest_migration_number(package)
-
-        if migration_number is not None and migration_number < current_migration_number:
-            raise InconsistentParamsException(
-                u'Inconsistent params given: migration number cant\'t be less than current'
-            )
-
-        if not migration_number:
-            lambda_for_filter = lambda number: number > current_migration_number
-        elif migration_number:
-            lambda_for_filter = lambda number: current_migration_number < number <= migration_number
+        if package is not None:
+            packages = (package, )
         else:
-            lambda_for_filter = lambda number: number == current_migration_number + 1
+            if self.config.packages:
+                packages = self.config.packages
+            else:
+                raise InconsistentParamsException(
+                    u'Inconsistent params: specify package or packages list in config'
+                )
 
-        migration_data = get_migrations_list(package)
-        new_migrations_numbers = filter(lambda_for_filter, migration_data.keys())
+        for package_for_migrate in packages:
+            current_migration_number = self.database_helper.get_latest_migration_number(package_for_migrate)
 
-        if not new_migrations_numbers:
-            raise NoForwardMigrationsFound(u'No new migrations found in package %s' % package)
+            if migration_number is not None and migration_number < current_migration_number:
+                raise InconsistentParamsException(
+                    u'Inconsistent params given: migration number cant\'t be less than current'
+                )
 
-        for new_migration_number in new_migrations_numbers:
-            migration_python_path, name = get_migration_python_path_and_name(
-                migration_data[new_migration_number]['file_name'], package
-            )
-            module = import_module(migration_python_path)
-            if not hasattr(module, 'forward'):
-                raise IncorrectMigrationFile(u'File %s has no forward function' % migration_python_path)
-            stdout.write('Migrating forward to migration %s\n' % name)
-            module.forward(self.database_api)
-            self.database_helper.write_migration_history(name, package)
+            if not migration_number:
+                lambda_for_filter = lambda number: number > current_migration_number
+            elif migration_number:
+                lambda_for_filter = lambda number: current_migration_number < number <= migration_number
+            else:
+                lambda_for_filter = lambda number: number == current_migration_number + 1
+
+            migration_data = get_migrations_list(package_for_migrate)
+            new_migrations_numbers = filter(lambda_for_filter, migration_data.keys())
+
+            if not new_migrations_numbers:
+                if package is None:
+                    raise NoForwardMigrationsFound(u'No new migrations found in package %s' % package_for_migrate)
+                else:
+                    stdout.write('No new new migrations found in package %s. Skipping.' % package_for_migrate)
+                    continue
+
+            for new_migration_number in new_migrations_numbers:
+                migration_python_path, name = get_migration_python_path_and_name(
+                    migration_data[new_migration_number]['file_name'], package_for_migrate
+                )
+                module = import_module(migration_python_path)
+                if not hasattr(module, 'forward'):
+                    raise IncorrectMigrationFile(u'File %s has no forward function' % migration_python_path)
+                stdout.write('Migrating forward to migration %s in package %s\n' % (name, package_for_migrate, ))
+                module.forward(self.database_api)
+                self.database_helper.write_migration_history(name, package_for_migrate)
 
     def backward(self, package, migration_number=None):
         """
@@ -162,6 +178,21 @@ class Api(object):
             self.database_helper.delete_migration_history(name, package)
 
     def status(self, package=None):
+        """
+        Returns status dictionary for given package or all packages in migration history
+        if 'package' is left None. Dictionary has next structure:
+        {
+            package:
+            {
+                name: migration name,
+                processed_at: datetime of migration apply
+            }
+        }
+        :param package: given status of the given package
+        """
+        if not self.database_helper.migration_history_exists():
+            self.database_helper.create_history_table()
+
         return self.database_helper.status(package)
 
     def squash(self, package, begin_from=1, name=None):
