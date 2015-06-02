@@ -4,9 +4,9 @@ Raw-sql-migrate is replacement for South migration system without ORM using raw 
 
 ## Config
 In order to use migrate api use should make an instance of Config class found in raw_sql_migrate package.
-By default one config instance is created in raw_sql_migrate.__init__.py module which try to load options
+By default one config instance is created in init module which tries to load options
 from raw_sql_migrate.yaml in your project root. Still you can create config based on yaml file located in 
-another directory. To do it:
+another directory. Usage:
 ```python
 from raw_sql_migrate import Config
 config = Config().init_from_file(path_to_file)
