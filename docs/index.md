@@ -30,8 +30,8 @@ database:
 history_table_name: migration history table name
 ```
 where available options are:
-- raw_sql_migrate.engines.postgresql_psycopg2 (requires psycopg2 package)
-- raw_sql_migrate.engines.mysql (requires MySQLdb-python package)
+* raw_sql_migrate.engines.postgresql_psycopg2 (requires psycopg2 package)
+* raw_sql_migrate.engines.mysql (requires MySQLdb-python package)
 Also you can pass specific param to drivers connect method, just add this param in database section.
 
 
