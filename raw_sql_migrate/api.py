@@ -166,7 +166,7 @@ class Api(object):
                 u'No backward migrations found in to downgrade from %s' % current_migration_number
             )
 
-        for previous_migration_number in previous_migrations_numbers:
+        for previous_migration_number in sorted(previous_migrations_numbers, reverse=True):
             migration_python_path, name = get_migration_python_path_and_name(
                 migration_data[previous_migration_number]['file_name'], package
             )
