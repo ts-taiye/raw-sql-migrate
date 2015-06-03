@@ -116,10 +116,10 @@ class Api(object):
             new_migrations_numbers = filter(lambda_for_filter, migration_data.keys())
 
             if not new_migrations_numbers:
-                if package is None:
+                if package is not None:
                     raise NoForwardMigrationsFound(u'No new migrations found in package %s' % package_for_migrate)
                 else:
-                    stdout.write('No new new migrations found in package %s. Skipping.' % package_for_migrate)
+                    stdout.write('No new new migrations found in package %s. Skipping.\n' % package_for_migrate)
                     continue
 
             for new_migration_number in new_migrations_numbers:
