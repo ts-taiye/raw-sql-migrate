@@ -80,7 +80,7 @@ In order to migrate forward call
 
 .. code-block:: python
 
-    api.forward(package, migration_number=42)
+    api.migrate(package)
 
 Note: to migrate all not applied migrations you should skip migration_number param.
 
@@ -90,7 +90,7 @@ In order to migrate forward call
 
 .. code-block:: python
 
-    api.backward(package, migration_number=1)
+    api.migrate(package, migration_number=0)
 
 Note: to migrate to initial state you should pass migration_number as 1.
 

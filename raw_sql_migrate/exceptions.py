@@ -5,14 +5,14 @@ __all__ = (
     'IncorrectDbBackendException',
     'InconsistentParamsException',
     'ParamRequiredException',
-    'NoForwardMigrationsFound',
-    'NoBackwardMigrationsFound',
+    'NoMigrationsFoundToApply',
     'IncorrectMigrationFile',
 )
 
 
 class RawSqlMigrateException(Exception):
     pass
+
 
 class IncorrectDbBackendException(Exception):
     pass
@@ -26,11 +26,7 @@ class ParamRequiredException(RawSqlMigrateException):
     pass
 
 
-class NoForwardMigrationsFound(RawSqlMigrateException):
-    pass
-
-
-class NoBackwardMigrationsFound(RawSqlMigrateException):
+class NoMigrationsFoundToApply(RawSqlMigrateException):
     pass
 
 
@@ -40,4 +36,3 @@ class IncorrectMigrationFile(RawSqlMigrateException):
 
 class IncorrectPackage(RawSqlMigrateException):
     pass
-

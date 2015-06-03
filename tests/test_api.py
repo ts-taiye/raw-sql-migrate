@@ -2,7 +2,6 @@
 
 from os.path import exists
 
-from raw_sql_migrate.api import Api
 from raw_sql_migrate.exceptions import ParamRequiredException
 from raw_sql_migrate.helpers import get_migrations_list
 
@@ -35,6 +34,7 @@ class GenerateMigrationNameTestCase(DatabaseTestCase):
         self.assertRaises(ParamRequiredException, self.api.create, self.python_path_to_test_package, '')
 
     def test_created_next(self):
+        print get_migrations_list(self.python_path_to_test_package)
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
         migration_list = get_migrations_list(self.python_path_to_test_package)
@@ -52,20 +52,20 @@ class MigrateForwardTestCase(DatabaseTestCase):
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
 
     def tearDown(self):
-        self.api.backward(self.python_path_to_test_package)
+        self.api.migrate(self.python_path_to_test_package, 0)
         super(MigrateForwardTestCase, self).tearDown()
 
     def test_migrate_forward(self):
-        self.api.forward(self.python_path_to_test_package)
+        self.api.migrate(self.python_path_to_test_package)
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
 
     def test_create_and_forward_two_migrations(self):
         self.api.create(self.python_path_to_test_package, 'test_migration_name2')
-        self.api.forward(self.python_path_to_test_package)
-        self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
+        self.api.migrate(self.python_path_to_test_package)
+        self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 2)
 
     def test_forward_from_packages_config_section(self):
-        self.api.forward()
+        self.api.migrate()
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
 
 
@@ -74,14 +74,14 @@ class MigrateBackwardTestCase(DatabaseTestCase):
     def setUp(self):
         super(MigrateBackwardTestCase, self).setUp()
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
-        self.api.forward(self.python_path_to_test_package)
+        self.api.migrate(self.python_path_to_test_package)
 
     def tearDown(self):
         super(MigrateBackwardTestCase, self).tearDown()
 
     def test_migrate_backward(self):
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
-        self.api.backward(self.python_path_to_test_package)
+        self.api.migrate(self.python_path_to_test_package, 0)
         self.assertEqual(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 0)
 
 

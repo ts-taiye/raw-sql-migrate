@@ -21,6 +21,7 @@ __all__ = (
 
 MIGRATION_NAME_TEMPLATE = '%04d'
 PASS_LINE = '    pass'
+
 MIGRATION_TEMPLATE = """# -*- coding: utf-8 -*-
 
 # Use database_api execute method to call raw sql query.
@@ -46,8 +47,12 @@ INIT_FILE_TEMPLATE = """# encoding: utf-8
 DIGITS_IN_MIGRATION_NUMBER = 4
 
 
-def get_package_migrations_directory(package):
+class MigrationDirection(object):
+    FORWARD = 'forward'
+    BACKWARD = 'backward'
 
+
+def get_package_migrations_directory(package):
     try:
         package_module = import_module(package)
     except ImportError:
@@ -65,11 +70,11 @@ def get_package_migrations_directory(package):
 
 def generate_migration_name(name=None, current_number=1):
     prefix = MIGRATION_NAME_TEMPLATE % current_number
-    return prefix if not name else '%s_%s.py' % (prefix, name, )
+    return prefix if not name else '%s_%s.py' % (prefix, name,)
 
 
 def get_empty_migration_file_content():
-    return MIGRATION_TEMPLATE % (PASS_LINE, PASS_LINE, )
+    return MIGRATION_TEMPLATE % (PASS_LINE, PASS_LINE,)
 
 
 def create_migration_file(path_to_migrations, name):
@@ -81,7 +86,7 @@ def create_migration_file(path_to_migrations, name):
 def create_squashed_migration_file(path_to_migrations, name, forward_content, backward_content):
     migration_file_path = os.path.join(path_to_migrations, name)
     with open(migration_file_path, 'w') as file_descriptor:
-        file_descriptor.write(MIGRATION_TEMPLATE % (forward_content, backward_content, ))
+        file_descriptor.write(MIGRATION_TEMPLATE % (forward_content, backward_content,))
 
 
 def get_migrations_list(package, directory=None):
@@ -108,7 +113,7 @@ def get_file_system_latest_migration_number(package):
 
 def get_migration_python_path_and_name(name, package):
     migration_module_name = name.strip('.py')
-    return '.'.join((package, 'migrations', migration_module_name, )), migration_module_name
+    return '.'.join((package, 'migrations', migration_module_name,)), migration_module_name
 
 
 def get_migration_file_content(file_path):
@@ -135,8 +140,34 @@ def get_migration_file_content(file_path):
     )
 
 
-class DatabaseHelper(object):
+def get_migration_direction(package_param, current_migration_number, migration_number):
+    if package_param is not None and migration_number is not None and migration_number < current_migration_number:
+        migration_direction = MigrationDirection.BACKWARD
 
+    elif package_param is not None and migration_number == current_migration_number:
+        migration_direction = None
+    else:
+        migration_direction = MigrationDirection.FORWARD
+    return migration_direction
+
+
+def get_migrations_numbers_to_apply(existing_migrations_numbers, current_migration_number, migration_number, direction):
+    if direction == MigrationDirection.FORWARD:
+        if migration_number:
+            lambda_for_filter = lambda number: current_migration_number < number <= migration_number
+        else:
+            lambda_for_filter = lambda number: number > current_migration_number
+        result = sorted(filter(lambda_for_filter, existing_migrations_numbers))
+    else:
+        if migration_number:
+            lambda_for_filter = lambda number: current_migration_number > number >= migration_number
+        else:
+            lambda_for_filter = lambda number: number <= current_migration_number
+        result = sorted(filter(lambda_for_filter, existing_migrations_numbers), reverse=True)
+    return result
+
+
+class DatabaseHelper(object):
     database_api = None
     migration_history_table_name = None
 
@@ -171,7 +202,7 @@ class DatabaseHelper(object):
                 WHERE package = %%s
                 ORDER BY id DESC LIMIT 1;
             ''' % self.migration_history_table_name
-            query_params = (package, )
+            query_params = (package,)
 
             rows = self.database_api.execute(sql, params=query_params, return_result='fetchall')
             if rows:
@@ -201,7 +232,7 @@ class DatabaseHelper(object):
             DROP TABLE %s;
         ''' % self.migration_history_table_name
         self.database_api.execute(
-            sql, params=(self.migration_history_table_name, ), return_result=None
+            sql, params=(self.migration_history_table_name,), return_result=None
         )
         self.database_api.commit()
 
@@ -211,7 +242,7 @@ class DatabaseHelper(object):
             INSERT INTO %s(name, package)
             VALUES (%%s, %%s);
         ''' % self.migration_history_table_name
-        self.database_api.execute(sql, params=(name, package, ), return_result=None)
+        self.database_api.execute(sql, params=(name, package,), return_result=None)
         self.database_api.commit()
 
     def delete_migration_history(self, name, package):
@@ -219,7 +250,7 @@ class DatabaseHelper(object):
             DELETE FROM %s
             WHERE name=%%s and package=%%s
         ''' % self.migration_history_table_name
-        self.database_api.execute(sql, params=(name, package, ), return_result=None)
+        self.database_api.execute(sql, params=(name, package,), return_result=None)
         self.database_api.commit()
 
     def status(self, package=None):
@@ -230,7 +261,7 @@ class DatabaseHelper(object):
                 WHERE package=%%s
                 ORDER BY processed_at DESC;
             ''' % self.migration_history_table_name
-            params = (package, )
+            params = (package,)
         else:
             sql = '''
                 SELECT DISTINCT(package), name, processed_at
