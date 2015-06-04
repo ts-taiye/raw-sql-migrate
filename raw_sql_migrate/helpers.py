@@ -30,7 +30,6 @@ MIGRATION_TEMPLATE = """# -*- coding: utf-8 -*-
 #   params: arguments dict for query
 #   return_result: type of query result, constants for it
 #       are located in database_api.CursorResults class. Possible variants: ROWCOUNT, FETCHALL
-# Call database_api.commit() or database_api.rollback() to commit or rollback changes
 
 
 def forward(database_api):
@@ -41,7 +40,7 @@ def backward(database_api):
 %s
 
 """
-INIT_FILE_TEMPLATE = """# encoding: utf-8
+INIT_FILE_TEMPLATE = """# -*- coding: utf-8 -*-
 
 """
 DIGITS_IN_MIGRATION_NUMBER = 4

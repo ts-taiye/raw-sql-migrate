@@ -79,20 +79,21 @@ class Api(object):
     def migrate(self, package=None, migration_number=None):
         """
         Migrates given package or config packages. Usage:
-        migrate(package='package_a') - forwards to latest available migration
-        migrate(package='package_a', migration_number=42) - if migration number is greater than current
+            migrate(package='package_a') - forwards to latest available migration
+            migrate(package='package_a', migration_number=42) - if migration number is greater than current
         applied migration migrates forward to 42 migration, else backward.
-        migrate() - migrates all packages found in config 'packages' section to latest available migrations
+            migrate() - migrates all packages found in config 'packages' section to latest available migrations
         :param package: package to search migrations in, if not provided tries to get all packages from
         'packages' config section. If found applies migration to all of them.
         :param migration_number: number of migration to apply. If number is behind of current migration
         system migrates back to given number, else migrates forward. If none is provided migrates to
         latest available.
-        :return:
+        :return: None
         :raises InconsistentParamsException: raises when:
         1. package or 'packages' section are not provided
         2. package is not provided but migration_number is given
         3. given migration_number in package is given for migrate is equal to current applied
+        4. incorrect migration number is given
         :raises NoMigrationsFoundToApply: raises when in the given package there are no migration to apply
         :raises IncorrectMigrationFile: raises when migration file has no forward or backward function
 
@@ -102,7 +103,10 @@ class Api(object):
             package = str(package)
 
         if migration_number:
-            migration_number = int(migration_number)
+            try:
+                migration_number = int(migration_number)
+            except (TypeError, ValueError, ):
+                raise InconsistentParamsException('Incorrect migration number is given')
 
         if package is not None:
             packages = (package, )
@@ -156,11 +160,16 @@ class Api(object):
                 stdout.write('Migrating %s to migration %s in package %s\n' % (
                     migration_direction, name, package_for_migrate,
                 ))
-                handler(self.database_api)
-                if migration_direction == MigrationDirection.FORWARD:
-                    self.database_helper.write_migration_history(name, package_for_migrate)
-                else:
-                    self.database_helper.delete_migration_history(name, package_for_migrate)
+                try:
+                    handler(self.database_api)
+                    self.database_api.commit()
+                    if migration_direction == MigrationDirection.FORWARD:
+                        self.database_helper.write_migration_history(name, package_for_migrate)
+                    else:
+                        self.database_helper.delete_migration_history(name, package_for_migrate)
+                except Exception as e:
+                    self.database_api.rollback()
+                    raise e
 
     def status(self, package=None):
         """
