@@ -51,6 +51,61 @@ class Api(object):
 
         self.database_helper = DatabaseHelper(self.database_api, self.config.history_table_name)
 
+    def _create_migration_history_table_if_not_exists(self):
+        if not self.database_helper.migration_history_exists():
+            self.database_helper.create_history_table()
+
+    def _prepare_migration_data(self, package, migration_number):
+        if package:
+            package = str(package)
+
+        if migration_number:
+            try:
+                migration_number = int(migration_number)
+            except (TypeError, ValueError, ):
+                raise InconsistentParamsException('Incorrect migration number is given')
+
+        if package is not None:
+            packages = (package, )
+        elif package is None and migration_number is None:
+            if self.config.packages:
+                packages = self.config.packages
+            else:
+                raise InconsistentParamsException(
+                    'Inconsistent params: specify package or packages list in config'
+                )
+        else:
+            raise InconsistentParamsException(
+                'Inconsistent params: can\'t apply one migration number to all packages, please give one or remove\n'
+                'migration number.\n'
+            )
+        return package, packages, migration_number
+
+    def _migrate(self, package, file_name, migration_direction):
+        migration_python_path, name = get_migration_python_path_and_name(
+            file_name, package
+        )
+        module = import_module(migration_python_path)
+        handler = getattr(module, migration_direction, None)
+        if not handler:
+            raise IncorrectMigrationFile('File %s has no %s function' % (
+                migration_python_path, migration_direction,
+            ))
+
+        stdout.write('Migrating %s to migration %s in package %s\n' % (
+            migration_direction, name, package,
+        ))
+        try:
+            handler(self.database_api)
+            self.database_api.commit()
+            if migration_direction == MigrationDirection.FORWARD:
+                self.database_helper.write_migration_history(name, package)
+            else:
+                self.database_helper.delete_migration_history(name, package)
+        except Exception as e:
+            self.database_api.rollback()
+            raise e
+
     def create(self, package, name):
         """
         Creates a new migration in given package. Command makes next things:
@@ -68,8 +123,7 @@ class Api(object):
         if not name:
             raise ParamRequiredException('Provide correct migration name')
 
-        if not self.database_helper.migration_history_exists():
-            self.database_helper.create_history_table()
+        self._create_migration_history_table_if_not_exists()
 
         current_migration_number = get_file_system_latest_migration_number(package)
         path_to_migrations = get_package_migrations_directory(package)
@@ -99,29 +153,9 @@ class Api(object):
 
         """
 
-        if package:
-            package = str(package)
+        package, packages, migration_number = self._prepare_migration_data(package, migration_number)
 
-        if migration_number:
-            try:
-                migration_number = int(migration_number)
-            except (TypeError, ValueError, ):
-                raise InconsistentParamsException('Incorrect migration number is given')
-
-        if package is not None:
-            packages = (package, )
-        elif package is None and migration_number is None:
-            if self.config.packages:
-                packages = self.config.packages
-            else:
-                raise InconsistentParamsException(
-                    'Inconsistent params: specify package or packages list in config'
-                )
-        else:
-            raise InconsistentParamsException(
-                'Inconsistent params: can\'t apply one migration number to all packages, please give one or remove\n'
-                'migration number.\n'
-            )
+        self._create_migration_history_table_if_not_exists()
 
         migration_direction = None
         for package_for_migrate in packages:
@@ -147,29 +181,11 @@ class Api(object):
                     continue
 
             for migration_number_to_apply in numbers_to_apply:
-                migration_python_path, name = get_migration_python_path_and_name(
-                    migration_data[migration_number_to_apply]['file_name'], package_for_migrate
+                self._migrate(
+                    package_for_migrate,
+                    migration_data[migration_number_to_apply]['file_name'],
+                    migration_direction
                 )
-                module = import_module(migration_python_path)
-                handler = getattr(module, migration_direction, None)
-                if not handler:
-                    raise IncorrectMigrationFile('File %s has no %s function' % (
-                        migration_python_path, migration_direction,
-                    ))
-
-                stdout.write('Migrating %s to migration %s in package %s\n' % (
-                    migration_direction, name, package_for_migrate,
-                ))
-                try:
-                    handler(self.database_api)
-                    self.database_api.commit()
-                    if migration_direction == MigrationDirection.FORWARD:
-                        self.database_helper.write_migration_history(name, package_for_migrate)
-                    else:
-                        self.database_helper.delete_migration_history(name, package_for_migrate)
-                except Exception as e:
-                    self.database_api.rollback()
-                    raise e
 
     def status(self, package=None):
         """
@@ -184,8 +200,7 @@ class Api(object):
         }
         :param package: given status of the given package
         """
-        if not self.database_helper.migration_history_exists():
-            self.database_helper.create_history_table()
+        self._create_migration_history_table_if_not_exists()
 
         return self.database_helper.status(package)
 
@@ -201,6 +216,9 @@ class Api(object):
         """
         result_forward_content = ''
         result_backward_content = ''
+
+        self._create_migration_history_table_if_not_exists()
+
         current_migration_number = self.database_helper.get_latest_migration_number(package)
         last_file_system_migration_number = get_file_system_latest_migration_number(package)
 
