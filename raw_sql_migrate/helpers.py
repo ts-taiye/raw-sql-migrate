@@ -159,7 +159,7 @@ def get_migrations_numbers_to_apply(existing_migrations_numbers, current_migrati
         result = sorted(filter(lambda_for_filter, existing_migrations_numbers))
     else:
         if migration_number:
-            lambda_for_filter = lambda number: current_migration_number > number >= migration_number
+            lambda_for_filter = lambda number: current_migration_number >= number > migration_number
         else:
             lambda_for_filter = lambda number: number <= current_migration_number
         result = sorted(filter(lambda_for_filter, existing_migrations_numbers), reverse=True)
