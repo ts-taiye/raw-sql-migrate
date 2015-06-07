@@ -92,9 +92,15 @@ class Api(object):
                 migration_python_path, migration_direction,
             ))
 
-        stdout.write('Migrating %s to migration %s in package %s\n' % (
-            migration_direction, name, package,
-        ))
+        if migration_direction == MigrationDirection.FORWARD:
+            stdout.write('Migrating %s to migration %s in package %s\n' % (
+                migration_direction, name, package,
+            ))
+        else:
+            stdout.write('Rollback migration %s for package %s\n' % (
+                name, package,
+            ))
+
         try:
             handler(self.database_api)
             self.database_api.commit()
