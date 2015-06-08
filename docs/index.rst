@@ -139,5 +139,5 @@ Transaction Control
 -------------------
 
 Each migration if fired in separate transaction, which will start when first sql is executed and will be committed
-when all code in forward\backward functions is executed. If there is an exception during migrate function all changes
+when all the code in forward\backward functions is executed. If there is an exception during migrate function all changes
 will be rolled back.

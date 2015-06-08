@@ -68,7 +68,6 @@ Short guide
             params={},
             return_result=None,
         )
-        database_api.commit()
     def backward(database_api):
         database_api.execute(
             sql='''
@@ -77,7 +76,6 @@ Short guide
             params={},
             return_result=None,
         )
-        database_api.commit()
 
 5. Run migrations:
 
