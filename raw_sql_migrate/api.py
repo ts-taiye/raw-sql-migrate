@@ -5,7 +5,7 @@ from sys import stdout
 
 from importlib import import_module
 
-from raw_sql_migrate import config as file_config
+from raw_sql_migrate import Config
 from raw_sql_migrate.exceptions import (
     InconsistentParamsException, NoForwardMigrationsFound, NoBackwardMigrationsFound,
     IncorrectMigrationFile, ParamRequiredException, IncorrectDbBackendException,
@@ -33,7 +33,8 @@ class Api(object):
         if config is not None:
             self.config = config
         else:
-            self.config = file_config
+            self.config = Config()
+            self.config.init_from_file()
 
         try:
             database_api_module = import_module(self.config.engine)

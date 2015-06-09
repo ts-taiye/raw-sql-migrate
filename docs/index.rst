@@ -19,17 +19,14 @@ another directory.
 .. code-block:: python
 
     from raw_sql_migrate import Config
-    config = Config().init_from_file(path_to_file)
+    config = Config()
+    config.init_from_file(path_to_file)
 
+where config file may be .yaml or .py.
+If path to file is not specified, then rsm.py and rsm.yaml will be searched in the root directory.
 
-Or you can just pass all params to constructor:
-
-.. code-block:: python
-
-    from raw_sql_migrate import Config
-    config = Config(database, history_table_name, packages)
-
-where params are mappings to yaml config structure:
+Examples of config files:
+rsm.yaml:
 
 .. code-block:: yaml
 
@@ -48,13 +45,41 @@ where params are mappings to yaml config structure:
         - package_b
         - package_c.package_d
 
-where available options are:
+rsm.py:
+
+.. code-block:: python
+
+    RSM_CONFIG = {
+        'database': {
+            'engine': engine backend module,
+            'host': database host,
+            'port': database port,
+            'name': database name,
+            'user': user name,
+            'password': user password,
+        },
+        'history_table_name': migration history table name,
+        'packages': [
+            'package_a',
+            'package_b',
+            'package_c.package_d',
+        ],
+    }
+
+Available options of 'engine' are:
 
 * raw_sql_migrate.engines.postgresql_psycopg2 (requires psycopg2 package)
 * raw_sql_migrate.engines.mysql (requires MySQLdb-python package)
 
 Also you can pass specific param to drivers connect method, just add this param in database section.
 Packages param is a list of packages where to search for new migration for api.forward command.
+
+You can just pass all params to constructor:
+
+.. code-block:: python
+
+    from raw_sql_migrate import Config
+    config = Config(database, history_table_name, packages)
 
 Api
 ===

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from os.path import dirname, abspath, join, exists, realpath
+from os.path import dirname, abspath, join, exists
 from shutil import rmtree
 
 from unittest import TestCase
@@ -35,5 +35,6 @@ class BaseTestCase(TestCase):
 class DatabaseTestCase(BaseTestCase):
 
     def setUp(self):
-        self.config = Config().init_from_file(join(dirname(realpath(__file__)), 'config.yaml'))
+        self.config = Config()
+        self.config.init_from_file()
         self.api = Api(self.config)

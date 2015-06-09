@@ -24,13 +24,15 @@ install:
     - pip install coveralls
 
 before_script:
-    - if [[ $DB == "postgresql" && $CONFIG_TYPE == "yaml" ]]; then psql -c "create database rsm_test;" -U postgres; cp tests/postgresql.yaml tests/config.yaml; fi
-    - if [[ $DB == "mysql" && $CONFIG_TYPE == "yaml" ]]; then mysql -e "create database rsm_test;" -uroot; cp tests/mysql.yaml tests/config.yaml; fi
-    - if [[ $DB == "postgresql" && $CONFIG_TYPE == "py" ]]; then psql -c "create database rsm_test;" -U postgres; cp tests/rsm_postgresql.py tests/rsm.py; fi
-    - if [[ $DB == "mysql" && $CONFIG_TYPE == "py" ]]; then mysql -e "create database rsm_test;" -uroot; cp tests/rsm_mysql.py tests/rsm.py; fi
+    - if [[ $DB == "postgresql" && $CONFIG_TYPE == "yaml" ]]; then psql -c "create database rsm_test;" -U postgres; cp tests/postgresql.yaml rsm.yaml; fi
+    - if [[ $DB == "mysql" && $CONFIG_TYPE == "yaml" ]]; then mysql -e "create database rsm_test;" -uroot; cp tests/mysql.yaml rsm.yaml; fi
+    - if [[ $DB == "postgresql" && $CONFIG_TYPE == "py" ]]; then psql -c "create database rsm_test;" -U postgres; cp tests/rsm_postgresql.py rsm.py; fi
+    - if [[ $DB == "mysql" && $CONFIG_TYPE == "py" ]]; then mysql -e "create database rsm_test;" -uroot; cp tests/rsm_mysql.py rsm.py; fi
 
 script:
     nosetests --with-coverage --cover-package=raw_sql_migrate
 
 after_success:
     - coveralls
+    - rm rsm.py
+    - rm rsm.yaml

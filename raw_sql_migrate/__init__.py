@@ -48,14 +48,14 @@ class Config(object):
         }
 
     def _import_from_python_file(self, path_to_config=None):
-        path_to_config = path_to_config or 'rsm.py'
+        path_to_config = path_to_config or 'rsm'
         try:
             module = import_module(path_to_config)
         except ImportError:
             return None
 
         try:
-            config_data = module.RSM_CONFIG
+            config_data = getattr(module, 'RSM_CONFIG')
             return config_data
         except AttributeError:
             return None
@@ -79,9 +79,10 @@ class Config(object):
     def init_from_file(self, path_to_config=None):
         if not path_to_config:
             config_data = None
-            while not config_data:
-                for handler in self.config_type_handlers.values():
-                    config_data = handler()
+            for handler in self.config_type_handlers.values():
+                config_data = handler()
+                if config_data:
+                    break
 
             if not config_data:
                 raise ConfigNotFoundException('Neither .py nor .yaml config is not found')
@@ -99,10 +100,3 @@ class Config(object):
         history_table_name = config_data.get('history_table_name')
         packages = config_data.get('packages')
         self.__init__(database_settings, history_table_name, packages)
-        return self
-
-config = Config()
-try:
-    config.init_from_file()
-except IOError:
-    pass
