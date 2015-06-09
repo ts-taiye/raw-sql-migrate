@@ -58,34 +58,26 @@ Short guide
 
     def forward(database_api):
         database_api.execute(
-            sql='''
+            '''
             CREATE TABLE test (
                id INT PRIMARY KEY NOT NULL,
                test_value BIGINT NOT NULL,
             );
             CREATE INDEX test_value_index ON test(test_value);
-            ''',
-            params={},
-            return_result=None,
+            '''
         )
+
     def backward(database_api):
-        database_api.execute(
-            sql='''
-            DROP TABLE test;
-            ''',
-            params={},
-            return_result=None,
-        )
+        database_api.execute('DROP TABLE test;')
 
 5. Run migrations:
 
 .. code-block:: python
 
-    api.forward('package_a.package_b')
+    api.migrate('package_a.package_b')
 
 6. Migrating backwards:
 
 .. code-block:: python
 
-    api.backward('package_a.package_b')
-
+    api.migrate(package='package_a.package_b', migration_number=0)
