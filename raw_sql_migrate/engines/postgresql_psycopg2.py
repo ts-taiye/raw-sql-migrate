@@ -15,44 +15,21 @@ __all__ = (
 class DatabaseApi(BaseApi):
 
     engine = __name__
+    DEFAULT_PORT = 5432
 
     @property
     def connection(self):
 
         if not connect:
-            raise Exception(u'Failed to import psycopg2, ensure you have installed it')
+            raise Exception('Failed to import psycopg2, ensure you have installed it')
 
         if self._connection is None:
             self._connection = connect(
                 database=self.name,
                 user=self.user,
                 password=self.password,
-                port=self.port,
+                port=self.port if self.port else self.DEFAULT_PORT,
                 host=self.host,
                 **self.additional_connection_params
             )
         return self._connection
-
-    def rollback(self):
-        self.connection.rollback()
-
-    def commit(self):
-        self.connection.commit()
-
-    def execute(self, sql, params=None, return_result=None):
-
-        if not params:
-            params = {}
-
-        result = None
-
-        with self.connection.cursor() as cursor:
-            cursor.execute(sql, params)
-            if return_result is None:
-                result = None
-            elif return_result == DatabaseApi.CursorResult.ROWCOUNT:
-                result = cursor.rowcount
-            elif return_result == DatabaseApi.CursorResult.FETCHALL:
-                result = cursor.fetchall()
-
-        return result

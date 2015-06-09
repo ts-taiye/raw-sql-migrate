@@ -11,10 +11,9 @@ from raw_sql_migrate.exceptions import (
     IncorrectMigrationFile, ParamRequiredException, IncorrectDbBackendException,
 )
 from raw_sql_migrate.helpers import (
-    generate_migration_name, get_package_migrations_directory,
-    create_migration_file, get_migrations_list, get_migration_python_path_and_name,
-    get_migration_file_content, create_squashed_migration_file, get_file_system_latest_migration_number,
-    get_migration_direction, get_migrations_numbers_to_apply,
+    generate_migration_name, get_package_migrations_directory, create_migration_file, get_migrations_list,
+    get_migration_python_path_and_name, get_migration_file_content, create_squashed_migration_file,
+    get_file_system_latest_migration_number, get_migration_direction, get_migrations_numbers_to_apply,
     DatabaseHelper, MigrationDirection,
 )
 
@@ -156,7 +155,6 @@ class Api(object):
         4. incorrect migration number is given
         :raises NoMigrationsFoundToApply: raises when in the given package there are no migration to apply
         :raises IncorrectMigrationFile: raises when migration file has no forward or backward function
-
         """
 
         package, packages, migration_number = self._prepare_migration_data(package, migration_number)

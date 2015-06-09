@@ -17,6 +17,7 @@ __all__ = (
     'MIGRATION_NAME_TEMPLATE',
     'MIGRATION_TEMPLATE',
     'DatabaseHelper',
+    'MigrationDirection',
 )
 
 MIGRATION_NAME_TEMPLATE = '%04d'
@@ -152,17 +153,18 @@ def get_migration_direction(package_param, current_migration_number, migration_n
 
 def get_migrations_numbers_to_apply(existing_migrations_numbers, current_migration_number, migration_number, direction):
     if direction == MigrationDirection.FORWARD:
+        reverse = False
         if migration_number:
             lambda_for_filter = lambda number: current_migration_number < number <= migration_number
         else:
             lambda_for_filter = lambda number: number > current_migration_number
-        result = sorted(filter(lambda_for_filter, existing_migrations_numbers))
     else:
+        reverse = True
         if migration_number:
             lambda_for_filter = lambda number: current_migration_number >= number > migration_number
         else:
             lambda_for_filter = lambda number: number <= current_migration_number
-        result = sorted(filter(lambda_for_filter, existing_migrations_numbers), reverse=True)
+    result = sorted(filter(lambda_for_filter, existing_migrations_numbers), reverse=reverse)
     return result
 
 
