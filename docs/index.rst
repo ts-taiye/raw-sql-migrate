@@ -12,9 +12,6 @@ Raw-sql-migrate is tool for managing your raw SQL migrations.
 Config
 ======
 In order to use migrate api use should make an instance of Config class found in raw_sql_migrate package.
-By default one config instance is created in init module which tries to load options data
-from raw_sql_migrate.yaml in your project root. Still you can create config based on yaml file located in
-another directory.
 
 .. code-block:: python
 
@@ -71,8 +68,8 @@ Available options of 'engine' are:
 * raw_sql_migrate.engines.postgresql_psycopg2 (requires psycopg2 package)
 * raw_sql_migrate.engines.mysql (requires MySQLdb-python package)
 
-Also you can pass specific param to drivers connect method, just add this param in database section.
-Packages param is a list of packages where to search for new migration for api.forward command.
+Also you can pass specific param to drivers connect method, just add them to config database section.
+Packages param is a list of packages where to search for new migrations.
 
 You can just pass all params to constructor:
 
@@ -83,6 +80,7 @@ You can just pass all params to constructor:
 
 Api
 ===
+
 In order to create and run migrations you need to make instance of Api class from
 raw_sql_migrate.api module and pass config instance if needed. Otherwise default config
 will be used.
@@ -105,7 +103,7 @@ In order to migrate forward call
 
 .. code-block:: python
 
-    api.forward(package, migration_number=42)
+    api.migrate(package)
 
 Note: to migrate all not applied migrations you should skip migration_number param.
 
@@ -115,9 +113,9 @@ In order to migrate forward call
 
 .. code-block:: python
 
-    api.backward(package, migration_number=1)
+    api.migrate(package, migration_number=0)
 
-Note: to migrate to initial state you should pass migration_number as 1.
+Note: to migrate to initial state you should pass migration_number as 0.
 
 Migrations status
 -----------------
@@ -158,3 +156,10 @@ content and appends it to result forward and backward functions. After all migra
 were processed command writes new migration file with 'begin_from' number and renames
 squashed migrations with '_squashed' prefix. Note that command can't squash already
 applied migrations.
+
+Transaction Control
+-------------------
+
+Each migration if fired in separate transaction, which will start when first sql is executed and will be committed
+when all the code in forward\backward functions is executed. If there is an exception during migrate function all changes
+will be rolled back.

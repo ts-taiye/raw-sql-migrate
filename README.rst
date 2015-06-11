@@ -25,7 +25,7 @@ TODO
 
 Short guide
 ===========
-1. Create raw_sql_migrate.yaml in your project dir with next structure:
+1. Create rsm.yaml or rsm.py in your project dir with next structure:
 
 .. code-block:: yaml
 
@@ -37,7 +37,26 @@ Short guide
         user: user name
         password: user password
     history_table_name: migration history table name
-    
+
+.. code-block:: python
+
+    RSM_CONFIG = {
+        'database': {
+            'engine': engine backend module,
+            'host': database host,
+            'port': database port,
+            'name': database name,
+            'user': user name,
+            'password': user password,
+        },
+        'history_table_name': migration history table name,
+        'packages': [
+            'package_a',
+            'package_b',
+            'package_c.package_d',
+        ],
+    }
+
 
 2. Import and make instance of Api:
 
@@ -58,36 +77,26 @@ Short guide
 
     def forward(database_api):
         database_api.execute(
-            sql='''
+            '''
             CREATE TABLE test (
                id INT PRIMARY KEY NOT NULL,
                test_value BIGINT NOT NULL,
             );
             CREATE INDEX test_value_index ON test(test_value);
-            ''',
-            params={},
-            return_result=None,
+            '''
         )
-        database_api.commit()
+
     def backward(database_api):
-        database_api.execute(
-            sql='''
-            DROP TABLE test;
-            ''',
-            params={},
-            return_result=None,
-        )
-        database_api.commit()
+        database_api.execute('DROP TABLE test;')
 
 5. Run migrations:
 
 .. code-block:: python
 
-    api.forward('package_a.package_b')
+    api.migrate('package_a.package_b')
 
 6. Migrating backwards:
 
 .. code-block:: python
 
-    api.backward('package_a.package_b')
-
+    api.migrate(package='package_a.package_b', migration_number=0)

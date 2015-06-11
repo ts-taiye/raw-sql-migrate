@@ -38,3 +38,15 @@ class DatabaseTestCase(BaseTestCase):
         self.config = Config()
         self.config.init_from_file()
         self.api = Api(self.config)
+
+    def tearDown(self):
+        try:
+            self.api.database_helper.database_api.execute(
+                '''
+                DROP TABLE %s;
+                ''' % self.config.history_table_name
+            )
+            self.api.database_helper.database_api.commit()
+        except:
+            pass
+        super(DatabaseTestCase, self).tearDown()

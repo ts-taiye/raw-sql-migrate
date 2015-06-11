@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from raw_sql_migrate.exceptions import RawSqlMigrateException
+
 __all__ = (
     'BaseApi',
 )
@@ -15,6 +17,7 @@ class BaseApi(object):
     password = None
     additional_connection_params = {}
     _connection = None
+    DEFAULT_PORT = None
 
     class CursorResult(object):
 
@@ -38,10 +41,30 @@ class BaseApi(object):
         raise NotImplementedError()
 
     def rollback(self):
-        raise NotImplementedError()
+        self._connection.rollback()
 
     def commit(self):
-        raise NotImplementedError()
+        self._connection.commit()
 
-    def execute(self, sql, params=None, return_result=None, commit=True):
-        raise NotImplementedError()
+    def execute(self, sql, params=None, return_result=None):
+
+        if not params:
+            params = {}
+
+        result = None
+
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute(sql, params)
+            if return_result is None:
+                result = None
+            elif return_result == BaseApi.CursorResult.ROWCOUNT:
+                result = cursor.rowcount
+            elif return_result == BaseApi.CursorResult.FETCHALL:
+                result = cursor.fetchall()
+        except Exception as e:
+            cursor.close()
+            self.connection.close()
+            raise RawSqlMigrateException(e)
+
+        return result
