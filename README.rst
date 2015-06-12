@@ -25,7 +25,7 @@ TODO
 
 Short guide
 ===========
-1. Create raw_sql_migrate.yaml in your project dir with next structure:
+1. Create rsm.yaml or rsm.py in your project dir with next structure:
 
 .. code-block:: yaml
 
@@ -37,7 +37,26 @@ Short guide
         user: user name
         password: user password
     history_table_name: migration history table name
-    
+
+.. code-block:: python
+
+    RSM_CONFIG = {
+        'database': {
+            'engine': engine backend module,
+            'host': database host,
+            'port': database port,
+            'name': database name,
+            'user': user name,
+            'password': user password,
+        },
+        'history_table_name': migration history table name,
+        'packages': [
+            'package_a',
+            'package_b',
+            'package_c.package_d',
+        ],
+    }
+
 
 2. Import and make instance of Api:
 

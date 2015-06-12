@@ -12,24 +12,18 @@ Raw-sql-migrate is tool for managing your raw SQL migrations.
 Config
 ======
 In order to use migrate api use should make an instance of Config class found in raw_sql_migrate package.
-By default one config instance is created in init module which tries to load options from raw_sql_migrate.yaml
-in your project root. Still you can create config based on yaml file located in
-another directory.
 
 .. code-block:: python
 
     from raw_sql_migrate import Config
-    config = Config().init_from_file(path_to_file)
+    config = Config()
+    config.init_from_file(path_to_file)
 
+where config file may be .yaml or .py.
+If path to file is not specified, then rsm.py and rsm.yaml will be searched in the root directory.
 
-Or you can just pass all params to constructor:
-
-.. code-block:: python
-
-    from raw_sql_migrate import Config
-    config = Config(database, history_table_name, packages)
-
-where params are mappings to yaml config structure:
+Examples of config files:
+rsm.yaml:
 
 .. code-block:: yaml
 
@@ -48,7 +42,28 @@ where params are mappings to yaml config structure:
         - package_b
         - package_c.package_d
 
-where available options are for engine are:
+rsm.py:
+
+.. code-block:: python
+
+    RSM_CONFIG = {
+        'database': {
+            'engine': engine backend module,
+            'host': database host,
+            'port': database port,
+            'name': database name,
+            'user': user name,
+            'password': user password,
+        },
+        'history_table_name': migration history table name,
+        'packages': [
+            'package_a',
+            'package_b',
+            'package_c.package_d',
+        ],
+    }
+
+Available options of 'engine' are:
 
 * raw_sql_migrate.engines.postgresql_psycopg2 (requires psycopg2 package)
 * raw_sql_migrate.engines.mysql (requires MySQLdb-python package)
@@ -56,12 +71,19 @@ where available options are for engine are:
 Also you can pass specific param to drivers connect method, just add them to config database section.
 Packages param is a list of packages where to search for new migrations.
 
+You can just pass all params to constructor:
+
+.. code-block:: python
+
+    from raw_sql_migrate import Config
+    config = Config(database, history_table_name, packages)
+
 Api
 ===
 
 In order to create and run migrations you need to make instance of Api class from
 raw_sql_migrate.api module and pass config instance if needed. Otherwise default config
-from raw_sql_migrate.yaml will be used.
+will be used.
 
 
 Creating new migration
