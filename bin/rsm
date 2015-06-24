@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import argparse
+
+from raw_sql_migrate.cli import status
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Raw SQL migration tool')
+
+    subparsers = parser.add_subparsers()
+
+    parser_versions = subparsers.add_parser('status', help='Get available versions of package')
+    parser_versions.add_argument('-p', '--package', help='Package name')
+    parser_versions.add_argument('-c', '--config', help='Path to config file')
+    parser_versions.set_defaults(func=status)
+
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    args.func(args)

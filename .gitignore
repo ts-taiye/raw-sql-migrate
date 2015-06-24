@@ -62,3 +62,9 @@ tests/config.yaml
 
 # PyCharm
 .idea
+
+# added by GitSavvy
+*.sublime-project
+
+# added by GitSavvy
+*.sublime-workspace
