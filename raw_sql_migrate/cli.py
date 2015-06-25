@@ -36,3 +36,15 @@ def status(args):
         sys.stdout.write(
             '%-40s %-40s %-40s \n' % (package, result[package]['name'], result[package]['processed_at'], )
         )
+
+
+def create(args):
+
+    api = _get_api(config_path=args.config)
+
+    if not api:
+        return
+
+    migration_name = api.create(package=args.package, name=args.name)
+
+    sys.stdout.write('%s migration was created for %s package\n' % (migration_name, args.package))

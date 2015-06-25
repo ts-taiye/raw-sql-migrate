@@ -136,6 +136,8 @@ class Api(object):
         migration_name = generate_migration_name(name, current_migration_number + 1)
         create_migration_file(path_to_migrations, migration_name)
 
+        return migration_name
+
     def migrate(self, package=None, migration_number=None):
         """
         Migrates given package or config packages. Usage:

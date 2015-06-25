@@ -3,7 +3,7 @@
 
 import argparse
 
-from raw_sql_migrate.cli import status
+from raw_sql_migrate.cli import status, create
 
 
 def parse_args():
@@ -11,10 +11,16 @@ def parse_args():
 
     subparsers = parser.add_subparsers()
 
-    parser_versions = subparsers.add_parser('status', help='Get available versions of package')
-    parser_versions.add_argument('-p', '--package', help='Package name')
-    parser_versions.add_argument('-c', '--config', help='Path to config file')
-    parser_versions.set_defaults(func=status)
+    parser_status = subparsers.add_parser('status', help='Get status of package migrations')
+    parser_status.add_argument('-p', '--package', help='Package name')
+    parser_status.add_argument('-c', '--config', help='Path to config file')
+    parser_status.set_defaults(func=status)
+
+    parser_create = subparsers.add_parser('create', help='Create new migration for specified package')
+    parser_create.add_argument('package', help='Package name')
+    parser_create.add_argument('name', help='Migration name')
+    parser_create.add_argument('-c', '--config', help='Path to config file')
+    parser_create.set_defaults(func=create)
 
     return parser.parse_args()
 
