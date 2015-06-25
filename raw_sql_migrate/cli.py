@@ -4,6 +4,7 @@ import sys
 
 from raw_sql_migrate import Config, ConfigNotFoundException
 from raw_sql_migrate.api import Api
+from raw_sql_migrate.exceptions import NoMigrationsFoundToApply, InconsistentParamsException
 
 
 def _get_api(config_path=None):
@@ -26,7 +27,7 @@ def status(args):
     if not api:
         return
 
-    result = api.status(package=args.package)  # config=rsm_config
+    result = api.status(package=args.package)
     if not result:
         sys.stdout.write('No migration history found.\n')
         return
@@ -48,3 +49,18 @@ def create(args):
     migration_name = api.create(package=args.package, name=args.name)
 
     sys.stdout.write('%s migration was created for %s package\n' % (migration_name, args.package))
+
+
+def migrate(args):
+
+    api = _get_api(config_path=args.config)
+
+    if not api:
+        return
+
+    try:
+        api.migrate(package=args.package, migration_number=args.migration_number)
+    except (NoMigrationsFoundToApply, InconsistentParamsException) as e:
+        sys.stderr.write(e.message + '\n')
+    else:
+        sys.stdout.write('Done.\n')
