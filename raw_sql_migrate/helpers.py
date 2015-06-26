@@ -255,22 +255,30 @@ class DatabaseHelper(object):
         self.database_api.commit()
 
     def status(self, package=None):
+        migration_history_param = (self.migration_history_table_name, ) * 2
         if package:
             sql = '''
-                SELECT DISTINCT(package), name, processed_at
-                FROM %s
-                WHERE package=%%s
-                ORDER BY processed_at DESC;
-            ''' % self.migration_history_table_name
-            params = (package,)
+                SELECT package, name, processed_at FROM  %s
+                WHERE id IN (
+                    SELECT max(id)
+                    FROM %s
+                    GROUP BY package
+                )
+                AND package = %%s
+                ORDER BY package;
+            '''
+            params = (package, )
         else:
             sql = '''
-                SELECT DISTINCT(package), name, processed_at
-                FROM %s
-                ORDER BY processed_at DESC;
-            ''' % self.migration_history_table_name
+                SELECT package, name, processed_at FROM  %s
+                WHERE id IN (
+                    SELECT max(id)
+                    FROM %s
+                    GROUP BY package
+                ) ORDER BY package;
+            '''
             params = ()
-
+        sql = sql % migration_history_param
         rows = self.database_api.execute(
             sql, params=params, return_result=self.database_api.CursorResult.FETCHALL
         )
