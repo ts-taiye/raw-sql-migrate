@@ -3,7 +3,7 @@
 from os.path import exists
 
 from raw_sql_migrate.exceptions import ParamRequiredException
-from raw_sql_migrate.helpers import get_migrations_list
+from raw_sql_migrate.helpers import FileSystemHelper
 
 from tests.base import DatabaseTestCase
 
@@ -27,7 +27,7 @@ class GenerateMigrationNameTestCase(DatabaseTestCase):
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
         self.assertTrue(exists(self.file_system_test_migrations_path))
         self.assertTrue(exists(self.file_system_path_to_init_py_in_migrations_directory))
-        migration_list = get_migrations_list(self.python_path_to_test_package)
+        migration_list = FileSystemHelper.get_migrations_list(self.python_path_to_test_package)
         self.assertEqual(len(migration_list), 1)
 
     def test_no_migration_name_given(self):
@@ -35,10 +35,9 @@ class GenerateMigrationNameTestCase(DatabaseTestCase):
         self.assertRaises(ParamRequiredException, self.api.create, self.python_path_to_test_package, '')
 
     def test_created_next(self):
-        print get_migrations_list(self.python_path_to_test_package)
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
-        migration_list = get_migrations_list(self.python_path_to_test_package)
+        migration_list = FileSystemHelper.get_migrations_list(self.python_path_to_test_package)
         self.assertEqual(len(migration_list), 2)
 
     def test_history_table_created(self):
@@ -81,10 +80,12 @@ class MigrateBackwardTestCase(DatabaseTestCase):
         super(MigrateBackwardTestCase, self).tearDown()
 
     def test_migrate_backward(self):
+        print 1
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
+        print 2
         self.api.migrate(self.python_path_to_test_package, 0)
+        print 3
         self.assertEqual(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 0)
-
 
 class SquashTestCase(DatabaseTestCase):
 
@@ -98,10 +99,10 @@ class SquashTestCase(DatabaseTestCase):
         for name in ('test1', 'test2', 'test3'):
             self.api.create(self.python_path_to_test_package, name)
 
-        migrations = get_migrations_list(self.python_path_to_test_package)
+        migrations = FileSystemHelper.get_migrations_list(self.python_path_to_test_package)
         self.assertEqual(len(migrations), 3)
         self.api.squash(self.python_path_to_test_package, begin_from=1)
-        migrations = get_migrations_list(self.python_path_to_test_package)
+        migrations = FileSystemHelper.get_migrations_list(self.python_path_to_test_package)
         self.assertEqual(len(migrations), 1)
         self.assertTrue(migrations.get(1) is not None)
 

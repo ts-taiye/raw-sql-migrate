@@ -7,23 +7,87 @@ from importlib import import_module
 from raw_sql_migrate.exceptions import IncorrectPackage, IncorrectMigrationFile
 
 __all__ = (
-    'get_package_migrations_directory',
-    'get_file_system_latest_migration_number',
-    'get_migration_python_path_and_name',
-    'get_empty_migration_file_content',
-    'create_migration_file',
-    'get_migration_file_content',
-    'create_squashed_migration_file',
-    'MIGRATION_NAME_TEMPLATE',
-    'MIGRATION_TEMPLATE',
+    'FileSystemHelper',
+    'MigrationHelper',
     'DatabaseHelper',
-    'MigrationDirection',
 )
 
-MIGRATION_NAME_TEMPLATE = '%04d'
-PASS_LINE = '    pass'
 
-MIGRATION_TEMPLATE = """# -*- coding: utf-8 -*-
+class FileSystemHelper(object):
+
+    @staticmethod
+    def get_package_migrations_directory(package):
+        try:
+            package_module = import_module(package)
+        except ImportError:
+            raise IncorrectPackage(u'Failed to import package %s.' % package)
+
+        path_to_module = os.path.dirname(package_module.__file__)
+        path_to_migrations = os.path.join(path_to_module, 'migrations')
+        if not os.path.exists(path_to_migrations):
+            os.mkdir(path_to_migrations)
+            init_file_path = os.path.join(path_to_migrations, '__init__.py')
+            with open(init_file_path, 'w+') as file_descriptor:
+                file_descriptor.write(MigrationHelper.INIT_FILE_TEMPLATE)
+        return path_to_migrations
+
+    @classmethod
+    def get_file_system_latest_migration_number(cls, package):
+        data = cls.get_migrations_list(package)
+        if not data:
+            return 0
+        number = sorted(data.keys())[-1]
+        return number
+
+    @classmethod
+    def get_migrations_list(cls, package, directory=None):
+        if not directory:
+            directory = FileSystemHelper.get_package_migrations_directory(package)
+        result = {}
+        for file_name in os.listdir(directory):
+            if file_name[MigrationHelper.DIGITS_IN_MIGRATION_NUMBER] == '_' and file_name.endswith('.py'):
+                result[int(file_name[:MigrationHelper.DIGITS_IN_MIGRATION_NUMBER])] = {
+                    'file_name': file_name,
+                    'file_path': os.path.join(directory, file_name),
+                    'file_directory': directory,
+                }
+        return result
+
+    @staticmethod
+    def get_migration_python_path_and_name(name, package):
+        migration_module_name = name.strip('.py')
+        return '.'.join((package, 'migrations', migration_module_name,)), migration_module_name
+
+    @staticmethod
+    def get_migration_file_content(file_path):
+        with open(file_path, 'r') as descriptor:
+            lines = [line for line in descriptor]
+
+        forward_start_index = None
+        forward_end_index = None
+        backward_start_index = None
+        backward_end_index = lines.index(lines[-1])
+
+        for line in lines:
+            if 'def forward(' in line:
+                forward_start_index = lines.index(line) + 1
+            elif 'def backward(' in line:
+                forward_end_index = lines.index(line) - 1
+                backward_start_index = lines.index(line) + 1
+        if forward_start_index is None or forward_end_index is None or backward_start_index is None:
+            raise IncorrectMigrationFile('Incorrect migration file found: %s' % file_path)
+
+        return (
+            str(lines[forward_start_index:forward_end_index]),
+            str(lines[backward_start_index:backward_end_index]),
+        )
+
+class MigrationHelper(object):
+
+    MIGRATION_NAME_TEMPLATE = '%04d'
+    PASS_LINE = '    pass'
+    MIGRATION_TEMPLATE = """
+# -*- coding: utf-8 -*-
 
 # Use database_api execute method to call raw sql query.
 # execute(sql, params=None, return_result=None)
@@ -40,132 +104,67 @@ def forward(database_api):
 def backward(database_api):
 %s
 
-"""
-INIT_FILE_TEMPLATE = """# -*- coding: utf-8 -*-
+    """
+    INIT_FILE_TEMPLATE = """
+# -*- coding: utf-8 -*-
 
 """
-DIGITS_IN_MIGRATION_NUMBER = 4
+    DIGITS_IN_MIGRATION_NUMBER = 4
 
+    class MigrationDirection(object):
+        FORWARD = 'forward'
+        BACKWARD = 'backward'
 
-class MigrationDirection(object):
-    FORWARD = 'forward'
-    BACKWARD = 'backward'
+    @classmethod
+    def generate_migration_name(cls, name=None, current_number=1):
+        prefix = cls.MIGRATION_NAME_TEMPLATE % current_number
+        return prefix if not name else '%s_%s.py' % (prefix, name,)
 
+    @classmethod
+    def get_empty_migration_file_content(cls):
+        return cls.MIGRATION_TEMPLATE % (cls.PASS_LINE, cls.PASS_LINE,)
 
-def get_package_migrations_directory(package):
-    try:
-        package_module = import_module(package)
-    except ImportError:
-        raise IncorrectPackage(u'Failed to import package %s.' % package)
+    @classmethod
+    def create_migration_file(cls, path_to_migrations, name):
+        migration_file_path = os.path.join(path_to_migrations, name)
+        with open(migration_file_path, 'w') as file_descriptor:
+            file_descriptor.write(cls.get_empty_migration_file_content())
 
-    path_to_module = os.path.dirname(package_module.__file__)
-    path_to_migrations = os.path.join(path_to_module, 'migrations')
-    if not os.path.exists(path_to_migrations):
-        os.mkdir(path_to_migrations)
-        init_file_path = os.path.join(path_to_migrations, '__init__.py')
-        with open(init_file_path, 'w+') as file_descriptor:
-            file_descriptor.write(INIT_FILE_TEMPLATE)
-    return path_to_migrations
+    @classmethod
+    def create_squashed_migration_file(cls, path_to_migrations, name, forward_content, backward_content):
+        migration_file_path = os.path.join(path_to_migrations, name)
+        with open(migration_file_path, 'w') as file_descriptor:
+            file_descriptor.write(cls.MIGRATION_TEMPLATE % (forward_content, backward_content,))
 
+    @classmethod
+    def get_migration_direction(cls, package_param, current_migration_number, migration_number):
+        if package_param is not None and migration_number is not None and migration_number < current_migration_number:
+            migration_direction = cls.MigrationDirection.BACKWARD
 
-def generate_migration_name(name=None, current_number=1):
-    prefix = MIGRATION_NAME_TEMPLATE % current_number
-    return prefix if not name else '%s_%s.py' % (prefix, name,)
-
-
-def get_empty_migration_file_content():
-    return MIGRATION_TEMPLATE % (PASS_LINE, PASS_LINE,)
-
-
-def create_migration_file(path_to_migrations, name):
-    migration_file_path = os.path.join(path_to_migrations, name)
-    with open(migration_file_path, 'w') as file_descriptor:
-        file_descriptor.write(get_empty_migration_file_content())
-
-
-def create_squashed_migration_file(path_to_migrations, name, forward_content, backward_content):
-    migration_file_path = os.path.join(path_to_migrations, name)
-    with open(migration_file_path, 'w') as file_descriptor:
-        file_descriptor.write(MIGRATION_TEMPLATE % (forward_content, backward_content,))
-
-
-def get_migrations_list(package, directory=None):
-    if not directory:
-        directory = get_package_migrations_directory(package)
-    result = {}
-    for file_name in os.listdir(directory):
-        if file_name[DIGITS_IN_MIGRATION_NUMBER] == '_' and file_name.endswith('.py'):
-            result[int(file_name[:DIGITS_IN_MIGRATION_NUMBER])] = {
-                'file_name': file_name,
-                'file_path': os.path.join(directory, file_name),
-                'file_directory': directory,
-            }
-    return result
-
-
-def get_file_system_latest_migration_number(package):
-    data = get_migrations_list(package)
-    if not data:
-        return 0
-    number = sorted(data.keys())[-1]
-    return number
-
-
-def get_migration_python_path_and_name(name, package):
-    migration_module_name = name.strip('.py')
-    return '.'.join((package, 'migrations', migration_module_name,)), migration_module_name
-
-
-def get_migration_file_content(file_path):
-    with open(file_path, 'r') as descriptor:
-        lines = [line for line in descriptor]
-
-    forward_start_index = None
-    forward_end_index = None
-    backward_start_index = None
-    backward_end_index = lines.index(lines[-1])
-
-    for line in lines:
-        if 'def forward(' in line:
-            forward_start_index = lines.index(line) + 1
-        elif 'def backward(' in line:
-            forward_end_index = lines.index(line) - 1
-            backward_start_index = lines.index(line) + 1
-    if forward_start_index is None or forward_end_index is None or backward_start_index is None:
-        raise IncorrectMigrationFile('Incorrect migration file found: %s' % file_path)
-
-    return (
-        str(lines[forward_start_index:forward_end_index]),
-        str(lines[backward_start_index:backward_end_index]),
-    )
-
-
-def get_migration_direction(package_param, current_migration_number, migration_number):
-    if package_param is not None and migration_number is not None and migration_number < current_migration_number:
-        migration_direction = MigrationDirection.BACKWARD
-
-    elif package_param is not None and migration_number == current_migration_number:
-        migration_direction = None
-    else:
-        migration_direction = MigrationDirection.FORWARD
-    return migration_direction
-
-
-def get_migrations_numbers_to_apply(existing_migrations_numbers, current_migration_number, migration_number, direction):
-    if direction == MigrationDirection.FORWARD:
-        reverse = False
-        if migration_number:
-            lambda_for_filter = lambda number: current_migration_number < number <= migration_number
+        elif package_param is not None and migration_number == current_migration_number:
+            migration_direction = None
         else:
-            lambda_for_filter = lambda number: number > current_migration_number
-    else:
-        reverse = True
-        if migration_number:
-            lambda_for_filter = lambda number: current_migration_number >= number > migration_number
+            migration_direction = cls.MigrationDirection.FORWARD
+        return migration_direction
+
+    @classmethod
+    def get_migrations_numbers_to_apply(
+            cls, existing_migrations_numbers, current_migration_number, migration_number, direction
+    ):
+        if direction == cls.MigrationDirection.FORWARD:
+            reverse = False
+            if migration_number:
+                lambda_for_filter = lambda number: current_migration_number < number <= migration_number
+            else:
+                lambda_for_filter = lambda number: number > current_migration_number
         else:
-            lambda_for_filter = lambda number: number <= current_migration_number
-    result = sorted(filter(lambda_for_filter, existing_migrations_numbers), reverse=reverse)
-    return result
+            reverse = True
+            if migration_number:
+                lambda_for_filter = lambda number: current_migration_number >= number > migration_number
+            else:
+                lambda_for_filter = lambda number: number <= current_migration_number
+        result = sorted(filter(lambda_for_filter, existing_migrations_numbers), reverse=reverse)
+        return result
 
 
 class DatabaseHelper(object):
