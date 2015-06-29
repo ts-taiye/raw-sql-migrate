@@ -234,7 +234,7 @@ class Api(object):
 
         if begin_from <= current_migration_number or current_migration_number > last_file_system_migration_number:
             raise InconsistentParamsException(
-                'Can squash only applied migrations. Current applied migration number is %s' % current_migration_number
+                'Can squash only migrations wich are not applied. Current applied migration number is %s' % current_migration_number
             )
 
         if begin_from < 1:

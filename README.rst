@@ -58,20 +58,13 @@ Short guide
     }
 
 
-2. Import and make instance of Api:
+2. Create first migration
 
-.. code-block:: python
+.. code-block:: shell
 
-    from raw_sql_migrate.api import Api
-    api = Api()
+    rsm create package_a.package_b initial
 
-3. Create first migration
-
-.. code-block:: python
-
-    api.create('package_a.package_b', name='initial')
-
-4. Edit migration file found package_a/package_b/migrations/0001_initial.py. Example:
+3. Edit migration file found package_a/package_b/migrations/0001_initial.py. Example:
 
 .. code-block:: python
 
@@ -89,14 +82,14 @@ Short guide
     def backward(database_api):
         database_api.execute('DROP TABLE test;')
 
-5. Run migrations:
+4. Run migrations:
 
-.. code-block:: python
+.. code-block:: shell
 
-    api.migrate('package_a.package_b')
+    rsm migrate package_a.package_b
 
-6. Migrating backwards:
+5. Migrating backwards:
 
-.. code-block:: python
+.. code-block:: shell
 
-    api.migrate(package='package_a.package_b', migration_number=0)
+    rsm migrate package_a.package_b 0
