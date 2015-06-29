@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import argparse
+
+from raw_sql_migrate.cli import status, create, migrate, squash
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Raw SQL migration tool')
+
+    subparsers = parser.add_subparsers()
+
+    parser_status = subparsers.add_parser('status', help='Get status of package migrations')
+    parser_status.add_argument('package', nargs='?', help='Package name')
+    parser_status.add_argument('-c', '--config', help='Path to config file')
+    parser_status.set_defaults(func=status)
+
+    parser_create = subparsers.add_parser('create', help='Create new migration for specified package')
+    parser_create.add_argument('package', help='Package name')
+    parser_create.add_argument('name', help='Migration name')
+    parser_create.add_argument('-c', '--config', help='Path to config file')
+    parser_create.set_defaults(func=create)
+
+    parser_migrate = subparsers.add_parser('migrate', help='Migrate to specified migration number')
+    parser_migrate.add_argument('package', help='Package name')
+    parser_migrate.add_argument('migration_number', nargs='?', help='Migration number')
+    parser_migrate.add_argument('-c', '--config', help='Path to config file')
+    parser_migrate.set_defaults(func=migrate)
+
+    parser_squash = subparsers.add_parser(
+        'squash',
+        help='Squashes several migrations into one. Command reads all not applied migrations'
+        'in package migration directory and appends content of forward and backward'
+        'function into result functions. Squash also renames squashed migration with'
+        '"squashed_" prefix.'
+    )
+    parser_squash.add_argument('package', help='Package name')
+    parser_squash.add_argument(
+        'begin_from',
+        help='migration number to begin squash from. Should be not less than 1'
+    )
+    parser_squash.add_argument(
+        'name', nargs='?',
+        help='squashed migration name'
+    )
+    parser_squash.add_argument('-c', '--config', help='Path to config file')
+    parser_squash.set_defaults(func=squash)
+
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    args.func(args)

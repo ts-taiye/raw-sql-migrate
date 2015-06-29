@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 
 from importlib import import_module
 
@@ -49,6 +50,8 @@ class Config(object):
 
     def _import_from_python_file(self, path_to_config=None):
         path_to_config = path_to_config or 'rsm'
+        sys.path.append(os.getcwd())
+
         try:
             module = import_module(path_to_config)
         except ImportError:
@@ -91,7 +94,7 @@ class Config(object):
             if config_type not in self.config_type_handlers:
                 raise ConfigNotFoundException('Strange config type - %s' % config_type)
 
-            config_data = self.config_type_handlers['config_type'](path_to_config)
+            config_data = self.config_type_handlers[config_type](path_to_config)
 
             if not config_data:
                 raise ConfigNotFoundException('Cannot read config %s' % path_to_config)

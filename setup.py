@@ -4,6 +4,8 @@ from setuptools import setup, find_packages
 
 __version__ = '0.1.1'
 
+requirements = [i.strip() for i in open('requirements.txt').readlines()]
+
 setup(
     name='raw-sql-migrate',
     version=__version__,
@@ -15,9 +17,8 @@ setup(
     long_description=open('README.rst').read(),
     packages=find_packages(),
     include_package_data=True,
-    install_requires=[
-        'PyYAML',
-    ],
+    install_requires=requirements,
+    scripts=['bin/rsm'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

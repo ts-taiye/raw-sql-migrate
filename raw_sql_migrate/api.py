@@ -131,6 +131,8 @@ class Api(object):
         migration_name = MigrationHelper.generate_migration_name(name, current_migration_number + 1)
         MigrationHelper.create_migration_file(path_to_migrations, migration_name)
 
+        return migration_name
+
     def migrate(self, package=None, migration_number=None):
         """
         Migrates given package or config packages. Usage:
@@ -229,12 +231,12 @@ class Api(object):
 
         if begin_from <= current_migration_number or current_migration_number > last_file_system_migration_number:
             raise InconsistentParamsException(
-                'Can squash only applied migrations. Current applied migration number is %s' % current_migration_number
+                'Can squash only migrations wich are not applied. Current applied migration number is %s' % current_migration_number
             )
 
         if begin_from < 1:
             raise InconsistentParamsException(
-                'begin_from should be not less than 1'
+                'begin_from should not be less than 1'
             )
 
         migration_data = FileSystemHelper.get_migrations_list(package)
