@@ -239,7 +239,7 @@ class Api(object):
 
         if begin_from < 1:
             raise InconsistentParamsException(
-                'begin_from should be not less than 1'
+                'begin_from should not be less than 1'
             )
 
         migration_data = get_migrations_list(package)

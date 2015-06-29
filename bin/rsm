@@ -3,7 +3,7 @@
 
 import argparse
 
-from raw_sql_migrate.cli import status, create, migrate
+from raw_sql_migrate.cli import status, create, migrate, squash
 
 
 def parse_args():
@@ -27,6 +27,25 @@ def parse_args():
     parser_migrate.add_argument('migration_number', nargs='?', help='Migration number')
     parser_migrate.add_argument('-c', '--config', help='Path to config file')
     parser_migrate.set_defaults(func=migrate)
+
+    parser_squash = subparsers.add_parser(
+        'squash',
+        help='Squashes several migrations into one. Command reads all not applied migrations'
+        'in package migration directory and appends content of forward and backward'
+        'function into result functions. Squash also renames squashed migration with'
+        '"squashed_" prefix.'
+    )
+    parser_squash.add_argument('package', help='Package name')
+    parser_squash.add_argument(
+        'begin_from',
+        help='migration number to begin squash from. Should be not less than 1'
+    )
+    parser_squash.add_argument(
+        'name', nargs='?',
+        help='squashed migration name'
+    )
+    parser_squash.add_argument('-c', '--config', help='Path to config file')
+    parser_squash.set_defaults(func=squash)
 
     return parser.parse_args()
 

@@ -64,3 +64,18 @@ def migrate(args):
         sys.stderr.write(e.message + '\n')
     else:
         sys.stdout.write('Done.\n')
+
+
+def squash(args):
+
+    api = _get_api(config_path=args.config)
+
+    if not api:
+        return
+
+    try:
+        api.migrate(package=args.package, begin_from=args.begin_from, name=args.name)
+    except InconsistentParamsException as e:
+        sys.stderr.write(e.message + '\n')
+    else:
+        sys.stdout.write('Done.\n')
