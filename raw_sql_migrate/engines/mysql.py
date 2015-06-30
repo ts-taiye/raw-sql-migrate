@@ -13,7 +13,8 @@ __all__ = (
 
 class DatabaseApi(BaseApi):
 
-    DEFAULT_PORT = 3306
+    engine = __name__
+    default_port = 3306
 
     @property
     def connection(self):
@@ -22,7 +23,7 @@ class DatabaseApi(BaseApi):
             raise Exception('Failed to import MySQLdb, ensure you have installed MySQLdb-python package')
 
         if self._connection is None:
-            port = self.port if self.port else self.DEFAULT_PORT
+            port = self.port if self.port else self.default_port
             self._connection = connect(
                 db=self.name,
                 user=self.user,

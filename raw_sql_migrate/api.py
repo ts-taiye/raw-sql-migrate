@@ -98,11 +98,11 @@ class Api(object):
 
         try:
             handler(self.database_api)
-            self.database_api.commit()
             if migration_direction == MigrationHelper.MigrationDirection.FORWARD:
                 self.database_helper.write_migration_history(name, package)
             else:
                 self.database_helper.delete_migration_history(name, package)
+            self.database_api.commit()
         except Exception as e:
             self.database_api.rollback()
             raise e

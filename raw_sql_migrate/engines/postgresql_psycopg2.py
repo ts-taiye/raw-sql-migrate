@@ -15,7 +15,7 @@ __all__ = (
 class DatabaseApi(BaseApi):
 
     engine = __name__
-    DEFAULT_PORT = 5432
+    default_port = 5432
 
     @property
     def connection(self):
@@ -28,7 +28,7 @@ class DatabaseApi(BaseApi):
                 database=self.name,
                 user=self.user,
                 password=self.password,
-                port=self.port if self.port else self.DEFAULT_PORT,
+                port=self.port if self.port else self.default_port,
                 host=self.host,
                 **self.additional_connection_params
             )

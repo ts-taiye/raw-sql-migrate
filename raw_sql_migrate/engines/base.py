@@ -17,7 +17,7 @@ class BaseApi(object):
     password = None
     additional_connection_params = {}
     _connection = None
-    DEFAULT_PORT = None
+    default_port = None
 
     class CursorResult(object):
 

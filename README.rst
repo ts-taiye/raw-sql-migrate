@@ -16,13 +16,6 @@ Docs
 See <http://rsm.readthedocs.org/en/latest/> page for full docs.
 
 
-TODO
-====
-- Write tests.
-- Make database backend support for Oracle Database.
-- Make base consistency check.
-
-
 Short guide
 ===========
 1. Create rsm.yaml or rsm.py in your project dir with next structure:

@@ -242,16 +242,14 @@ class DatabaseHelper(object):
             INSERT INTO %s(name, package)
             VALUES (%%s, %%s);
         ''' % self.migration_history_table_name
-        self.database_api.execute(sql, params=(name, package,), return_result=None)
-        self.database_api.commit()
+        self.database_api.execute(sql, params=(name, package, ), return_result=None)
 
     def delete_migration_history(self, name, package):
         sql = '''
             DELETE FROM %s
             WHERE name=%%s and package=%%s
         ''' % self.migration_history_table_name
-        self.database_api.execute(sql, params=(name, package,), return_result=None)
-        self.database_api.commit()
+        self.database_api.execute(sql, params=(name, package, ), return_result=None)
 
     def status(self, package=None):
         migration_history_param = (self.migration_history_table_name, ) * 2

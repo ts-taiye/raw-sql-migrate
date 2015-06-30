@@ -113,17 +113,20 @@ class StatusTestCase(DatabaseTestCase):
         super(StatusTestCase, self).setUp()
         self.api._create_migration_history_table_if_not_exists()
         self.api.database_helper.write_migration_history('0001_initial', 'test_package')
+        self.api.database_api.commit()
 
     def tearDown(self):
         super(StatusTestCase, self).tearDown()
 
     def test_correct_status_for_multiple_migrations(self):
         self.api.database_helper.write_migration_history('0002_do_something', 'test_package')
+        self.api.database_api.commit()
         data = self.api.status()
         self.assertEqual(len(data.keys()), 1)
 
     def test_correct_status_for_multiple_migrations_with_package(self):
         self.api.database_helper.write_migration_history('0002_do_something', 'test_package')
+        self.api.database_api.commit()
         data = self.api.status(package='test_package')
         self.assertEqual(len(data.keys()), 1)
 
