@@ -74,7 +74,7 @@ def squash(args):
         return
 
     try:
-        api.migrate(package=args.package, begin_from=args.begin_from, name=args.name)
+        api.squash(package=args.package, begin_from=args.begin_from, name=args.name)
     except InconsistentParamsException as e:
         sys.stderr.write(e.message + '\n')
     else:
