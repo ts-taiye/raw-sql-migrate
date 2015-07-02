@@ -8,9 +8,10 @@ from importlib import import_module
 from raw_sql_migrate import Config
 from raw_sql_migrate.exceptions import (
     InconsistentParamsException, NoMigrationsFoundToApply,
-    IncorrectMigrationFile, ParamRequiredException, IncorrectDbBackendException,
+    ParamRequiredException, IncorrectDbBackendException,
 )
 from raw_sql_migrate.helpers import FileSystemHelper, MigrationHelper, DatabaseHelper
+from raw_sql_migrate.migration import Migration
 
 __all__ = (
     'Api',
@@ -74,38 +75,7 @@ class Api(object):
                 'Inconsistent params: can\'t apply one migration number to all packages, please give one or remove\n'
                 'migration number.\n'
             )
-        return package, packages, migration_number
-
-    def _migrate(self, package, file_name, migration_direction):
-        migration_python_path, name = FileSystemHelper.get_migration_python_path_and_name(
-            file_name, package
-        )
-        module = import_module(migration_python_path)
-        handler = getattr(module, migration_direction, None)
-        if not handler:
-            raise IncorrectMigrationFile('File %s has no %s function' % (
-                migration_python_path, migration_direction,
-            ))
-
-        if migration_direction == MigrationHelper.MigrationDirection.FORWARD:
-            stdout.write('Migrating %s to migration %s in package %s\n' % (
-                migration_direction, name, package,
-            ))
-        else:
-            stdout.write('Rollback migration %s for package %s\n' % (
-                name, package,
-            ))
-
-        try:
-            handler(self.database_api)
-            if migration_direction == MigrationHelper.MigrationDirection.FORWARD:
-                self.database_helper.write_migration_history(name, package)
-            else:
-                self.database_helper.delete_migration_history(name, package)
-            self.database_api.commit()
-        except Exception as e:
-            self.database_api.rollback()
-            raise e
+        return packages, migration_number
 
     def create(self, package, name):
         """
@@ -126,12 +96,12 @@ class Api(object):
 
         self._create_migration_history_table_if_not_exists()
 
-        current_migration_number = FileSystemHelper.get_file_system_latest_migration_number(package)
-        path_to_migrations = FileSystemHelper.get_package_migrations_directory(package)
-        migration_name = MigrationHelper.generate_migration_name(name, current_migration_number + 1)
-        MigrationHelper.create_migration_file(path_to_migrations, migration_name)
-
-        return migration_name
+        migration = Migration(
+            py_package=package,
+            database_api=self.database_api,
+            config=self.config
+        )
+        migration.create(name)
 
     def migrate(self, package=None, migration_number=None):
         """
@@ -155,7 +125,7 @@ class Api(object):
         :raises IncorrectMigrationFile: raises when migration file has no forward or backward function
         """
 
-        package, packages, migration_number = self._prepare_migration_data(package, migration_number)
+        packages, migration_number = self._prepare_migration_data(package, migration_number)
 
         self._create_migration_history_table_if_not_exists()
 
@@ -164,7 +134,7 @@ class Api(object):
             current_migration_number = self.database_helper.get_latest_migration_number(package_for_migrate)
             if not migration_direction:
                 migration_direction = MigrationHelper.get_migration_direction(
-                    package, current_migration_number, migration_number
+                    package_for_migrate, current_migration_number, migration_number
                 )
                 if migration_direction is None:
                     raise InconsistentParamsException('Current migration number matches given one')
@@ -185,11 +155,14 @@ class Api(object):
                     continue
 
             for migration_number_to_apply in numbers_to_apply:
-                self._migrate(
-                    package_for_migrate,
-                    migration_data[migration_number_to_apply]['file_name'],
-                    migration_direction
+                file_name = migration_data[migration_number_to_apply]['file_name']
+                migration = Migration(
+                    py_package=package,
+                    database_api=self.database_api,
+                    config=self.config,
+                    py_module_name=file_name
                 )
+                migration.migrate(migration_direction)
 
     def status(self, package=None):
         """
@@ -231,7 +204,8 @@ class Api(object):
 
         if begin_from <= current_migration_number or current_migration_number > last_file_system_migration_number:
             raise InconsistentParamsException(
-                'Can squash only migrations wich are not applied. Current applied migration number is %s' % current_migration_number
+                'Can squash only migrations which are not applied. Current applied migration number is %s'
+                % current_migration_number
             )
 
         if begin_from < 1:
@@ -252,12 +226,8 @@ class Api(object):
             new_file_name = 'squashed_%s' % file_name
             new_file_path = path.join(migration_data[key]['file_directory'], new_file_name)
             rename(migration_data[key]['file_path'], new_file_path)
-        last_number = ordered_keys[-1]
-        if name is None:
-            name = '%04d_squashed_%04d_to_%04d.py' % (begin_from, begin_from, last_number, )
-        else:
-            name = MigrationHelper.generate_migration_name(name, begin_from)
-        path_to_package_migrations = FileSystemHelper.get_package_migrations_directory(package)
-        MigrationHelper.create_squashed_migration_file(
-            path_to_package_migrations, name, result_forward_content, result_backward_content
-        )
+
+        first_migration_number = ordered_keys[-1]
+
+        migration = Migration(package, database_api=self.database_api, config=self.config)
+        migration.create_squashed(name, first_migration_number, result_forward_content, result_backward_content)
