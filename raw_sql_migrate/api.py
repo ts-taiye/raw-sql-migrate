@@ -5,14 +5,14 @@ from sys import stdout
 
 from importlib import import_module
 
-from raw_sql_migrate import Config
+from raw_sql_migrate import Config, config_storage
+from raw_sql_migrate.engines import database_api_storage
 from raw_sql_migrate.exceptions import (
     InconsistentParamsException, NoMigrationsFoundToApply,
     ParamRequiredException, IncorrectDbBackendException,
 )
 from raw_sql_migrate.helpers import FileSystemHelper, MigrationHelper, DatabaseHelper
 from raw_sql_migrate.migration import Migration
-from raw_sql_migrate.engines import database_api_storage
 
 __all__ = (
     'Api',
@@ -21,37 +21,35 @@ __all__ = (
 
 class Api(object):
 
-    config = None
     database_helper = None
 
     def __init__(self, config=None):
-
         if config is not None:
-            self.config = config
+            config_instance = config
         else:
-            self.config = Config()
-            self.config.init_from_file()
-
+            config_instance = Config()
+            config_instance.init_from_file()
+        config_storage.set_config_instance(config_instance)
         try:
-            database_api_module = import_module(self.config.engine)
+            database_api_module = import_module(config.engine)
             database_api_storage.set_database_api(database_api_module.DatabaseApi(
-                self.config.host,
-                self.config.port,
-                self.config.name,
-                self.config.user,
-                self.config.password,
-                self.config.additional_connection_params
+                config.host,
+                config.port,
+                config.name,
+                config.user,
+                config.password,
+                config.additional_connection_params
             ))
         except (ImportError, AttributeError, ):
-            raise IncorrectDbBackendException(u'Failed to import given database engine: %s' % self.config.engine)
+            raise IncorrectDbBackendException(u'Failed to import given database engine: %s' % config.engine)
 
-        self.database_helper = DatabaseHelper(database_api_storage.database_api, self.config.history_table_name)
+    @staticmethod
+    def _create_migration_history_table_if_not_exists():
+        if not DatabaseHelper.migration_history_exists():
+            DatabaseHelper.create_history_table()
 
-    def _create_migration_history_table_if_not_exists(self):
-        if not self.database_helper.migration_history_exists():
-            self.database_helper.create_history_table()
-
-    def _prepare_migration_data(self, package, migration_number):
+    @staticmethod
+    def _prepare_migration_data(package, migration_number):
         if package:
             package = str(package)
 
@@ -64,8 +62,8 @@ class Api(object):
         if package is not None:
             packages = (package, )
         elif package is None and migration_number is None:
-            if self.config.packages:
-                packages = self.config.packages
+            if config_storage.config.packages:
+                packages = config_storage.config.packages
             else:
                 raise InconsistentParamsException(
                     'Inconsistent params: specify package or packages list in config'
@@ -98,8 +96,7 @@ class Api(object):
 
         Migration.create(
             py_package=package,
-            name=name,
-            config=self.config
+            name=name
         )
 
     def migrate(self, package=None, migration_number=None):
@@ -130,7 +127,7 @@ class Api(object):
 
         migration_direction = None
         for package_for_migrate in packages:
-            current_migration_number = self.database_helper.get_latest_migration_number(package_for_migrate)
+            current_migration_number = DatabaseHelper.get_latest_migration_number(package_for_migrate)
             if not migration_direction:
                 migration_direction = MigrationHelper.get_migration_direction(
                     package_for_migrate, current_migration_number, migration_number
@@ -157,7 +154,6 @@ class Api(object):
                 file_name = migration_data[migration_number_to_apply]['file_name']
                 migration = Migration(
                     py_package=package_for_migrate,
-                    config=self.config,
                     py_module_name=file_name
                 )
                 migration.migrate(migration_direction)
@@ -177,7 +173,7 @@ class Api(object):
         """
         self._create_migration_history_table_if_not_exists()
 
-        return self.database_helper.status(package)
+        return DatabaseHelper.status(package)
 
     def squash(self, package, begin_from=1, name=None):
         """
@@ -194,7 +190,7 @@ class Api(object):
 
         self._create_migration_history_table_if_not_exists()
 
-        current_migration_number = self.database_helper.get_latest_migration_number(package)
+        current_migration_number = DatabaseHelper.get_latest_migration_number(package)
         last_file_system_migration_number = FileSystemHelper.get_file_system_latest_migration_number(package)
 
         if begin_from:
@@ -227,16 +223,11 @@ class Api(object):
 
         first_migration_number = ordered_keys[0]
 
-        print first_migration_number
-        print result_forward_content
-        print result_backward_content
-
         Migration.create_squashed(
             py_package=package,
             name=name,
-            config=self.config,
+            config=config_storage.config,
             migration_number=first_migration_number,
             forward_content=result_forward_content,
             backward_content=result_backward_content
         )
-

@@ -4,6 +4,8 @@ import os
 
 from importlib import import_module
 
+from raw_sql_migrate import config_storage
+from raw_sql_migrate.engines import database_api_storage
 from raw_sql_migrate.exceptions import IncorrectPackage, IncorrectMigrationFile
 
 __all__ = (
@@ -81,6 +83,7 @@ class FileSystemHelper(object):
             ''.join(lines[forward_start_index:forward_end_index]).replace('\n\n', '\n'),
             ''.join(lines[backward_start_index:backward_end_index]).replace('\n\n', '\n'),
         )
+
 
 class MigrationHelper(object):
 
@@ -167,14 +170,9 @@ def backward(database_api):
 
 
 class DatabaseHelper(object):
-    database_api = None
-    migration_history_table_name = None
 
-    def __init__(self, database_api, migration_history_table_name):
-        self.database_api = database_api
-        self.migration_history_table_name = migration_history_table_name
-
-    def migration_history_exists(self):
+    @staticmethod
+    def migration_history_exists():
 
         sql = '''
             SELECT *
@@ -182,35 +180,37 @@ class DatabaseHelper(object):
             WHERE table_name=%(history_table_name)s
         '''
 
-        result = self.database_api.execute(
+        result = database_api_storage.database_api.execute(
             sql,
-            params={'history_table_name': self.migration_history_table_name},
+            params={'history_table_name': config_storage.config.history_table_name},
             return_result='rowcount',
         )
 
         return True if result else False
 
-    def get_latest_migration_number(self, package):
+    @classmethod
+    def get_latest_migration_number(cls, package):
         result = 0
-        if not self.migration_history_exists():
-            self.create_history_table()
+        if not cls.migration_history_exists():
+            cls.create_history_table()
         else:
             sql = '''
                 SELECT name
                 FROM %s
                 WHERE package = %%s
                 ORDER BY id DESC LIMIT 1;
-            ''' % self.migration_history_table_name
+            ''' % config_storage.config.history_table_name
             query_params = (package,)
 
-            rows = self.database_api.execute(sql, params=query_params, return_result='fetchall')
+            rows = database_api_storage.database_api.execute(sql, params=query_params, return_result='fetchall')
             if rows:
                 name = rows[0][0]
                 result = int(name.split('_')[0].strip('0'))
 
         return result
 
-    def create_history_table(self):
+    @staticmethod
+    def create_history_table():
 
         sql = '''
             CREATE TABLE %s (
@@ -219,39 +219,43 @@ class DatabaseHelper(object):
                 name VARCHAR(200) NOT NULL,
                 processed_at  TIMESTAMP default current_timestamp
             );
-        ''' % self.migration_history_table_name
-        self.database_api.execute(
+        ''' % config_storage.config.history_table_name
+        database_api_storage.database_api.execute(
             sql, params=(), return_result=None
         )
-        self.database_api.commit()
+        database_api_storage.database_api.commit()
 
-    def drop_history_table(self):
+    @staticmethod
+    def drop_history_table():
 
         sql = '''
             DROP TABLE %s;
-        ''' % self.migration_history_table_name
-        self.database_api.execute(
-            sql, params=(self.migration_history_table_name,), return_result=None
+        ''' % config_storage.config.history_table_name
+        database_api_storage.database_api.execute(
+            sql, params=(config_storage.config.history_table_name,), return_result=None
         )
-        self.database_api.commit()
+        database_api_storage.database_api.commit()
 
-    def write_migration_history(self, name, package):
+    @staticmethod
+    def write_migration_history(name, package):
 
         sql = '''
             INSERT INTO %s(name, package)
             VALUES (%%s, %%s);
-        ''' % self.migration_history_table_name
-        self.database_api.execute(sql, params=(name, package, ), return_result=None)
+        ''' % config_storage.config.history_table_name
+        database_api_storage.database_api.execute(sql, params=(name, package, ), return_result=None)
 
-    def delete_migration_history(self, name, package):
+    @staticmethod
+    def delete_migration_history(name, package):
         sql = '''
             DELETE FROM %s
             WHERE name=%%s and package=%%s
-        ''' % self.migration_history_table_name
-        self.database_api.execute(sql, params=(name, package, ), return_result=None)
+        ''' % config_storage.config.history_table_name
+        database_api_storage.database_api.execute(sql, params=(name, package, ), return_result=None)
 
-    def status(self, package=None):
-        migration_history_param = (self.migration_history_table_name, ) * 2
+    @staticmethod
+    def status(package=None):
+        migration_history_param = (config_storage.config.history_table_name, ) * 2
         if package:
             sql = '''
                 SELECT package, name, processed_at FROM  %s
@@ -275,8 +279,8 @@ class DatabaseHelper(object):
             '''
             params = ()
         sql = sql % migration_history_param
-        rows = self.database_api.execute(
-            sql, params=params, return_result=self.database_api.CursorResult.FETCHALL
+        rows = database_api_storage.database_api.execute(
+            sql, params=params, return_result=database_api_storage.database_api.CursorResult.FETCHALL
         )
         result = {}
         for row in rows:

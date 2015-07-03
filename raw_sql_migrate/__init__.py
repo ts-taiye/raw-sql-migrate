@@ -103,3 +103,17 @@ class Config(object):
         history_table_name = config_data.get('history_table_name')
         packages = config_data.get('packages')
         self.__init__(database_settings, history_table_name, packages)
+
+
+class ConfigStorage(object):
+
+    _config = None
+
+    @property
+    def config(self):
+        return self._config
+
+    def set_config_instance(self, config_instance):
+        self._config = config_instance
+
+config_storage = ConfigStorage()

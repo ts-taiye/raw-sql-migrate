@@ -5,9 +5,10 @@ from os import path
 from importlib import import_module
 from sys import stdout
 
+from raw_sql_migrate import config_storage
 from raw_sql_migrate.helpers import MigrationHelper, FileSystemHelper
-from raw_sql_migrate.exceptions import IncorrectMigrationFile
 from raw_sql_migrate.engines import database_api_storage
+from raw_sql_migrate.exceptions import IncorrectMigrationFile
 
 __all__ = (
     'Migration',
@@ -29,7 +30,6 @@ class Migration(object):
     Example: 0001_initial.py
     :var module: module object of migration
     :var database_api: database connection wrapper
-    :var config: instance of config class
     """
     py_package = None
     py_migration_package = None
@@ -38,12 +38,10 @@ class Migration(object):
     fs_migration_directory = None
     fs_file_name = None
     module = None
-    config = None
 
-    def __init__(self, py_package, config, py_module_name=None):
+    def __init__(self, py_package, py_module_name=None):
         self.py_package = py_package
         self.fs_migration_directory = FileSystemHelper.get_package_migrations_directory(py_package)
-        self.config = config
         self.py_module_name = py_module_name.rstrip('.py')
         self.fs_file_name = '%s.py' % py_module_name
         self.py_module, self.py_module_name = FileSystemHelper.get_migration_python_path_and_name(
@@ -90,7 +88,7 @@ class Migration(object):
         sql = '''
             INSERT INTO %s(name, package)
             VALUES (%%s, %%s);
-        ''' % self.config.history_table_name
+        ''' % config_storage.config.history_table_name
         database_api_storage.database_api.execute(
             sql, params=(self.py_module_name, self.py_package, ), return_result=None
         )
@@ -103,13 +101,13 @@ class Migration(object):
         sql = '''
             DELETE FROM %s
             WHERE name=%%s and package=%%s
-        ''' % self.config.history_table_name
+        ''' % config_storage.config.history_table_name
         database_api_storage.database_api.execute(
             sql, params=(self.py_module_name, self.py_package, ), return_result=None
         )
 
     @staticmethod
-    def create(py_package, name, config):
+    def create(py_package, name):
         """
         Creates new migration and binds current instance to result module
         :param name: new migration name given by user. Example: initial
@@ -119,7 +117,7 @@ class Migration(object):
         fs_migration_directory = FileSystemHelper.get_package_migrations_directory(py_package)
         fs_file_name = MigrationHelper.generate_migration_name(name, current_migration_number + 1)
         MigrationHelper.create_migration_file(fs_migration_directory, fs_file_name)
-        return Migration(py_package, config, fs_file_name.rstrip('.py'))
+        return Migration(py_package, fs_file_name.rstrip('.py'))
 
     @staticmethod
     def create_squashed(py_package, name, migration_number, forward_content, backward_content, config):
@@ -139,4 +137,4 @@ class Migration(object):
         fs_file_path = path.join(fs_migration_directory, name)
         with open(fs_file_path, 'w') as file_descriptor:
             file_descriptor.write(MigrationHelper.MIGRATION_TEMPLATE % (forward_content, backward_content, ))
-        return Migration(py_package, config, name.rstrip('.py'))
+        return Migration(py_package, name.rstrip('.py'))
