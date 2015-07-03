@@ -4,6 +4,7 @@ from os.path import exists
 
 from raw_sql_migrate.exceptions import ParamRequiredException
 from raw_sql_migrate.helpers import FileSystemHelper
+from raw_sql_migrate.engines import database_api_storage
 
 from tests.base import DatabaseTestCase
 
@@ -56,7 +57,6 @@ class MigrateForwardTestCase(DatabaseTestCase):
         super(MigrateForwardTestCase, self).tearDown()
 
     def test_migrate_forward(self):
-        print __name__
         self.api.migrate(self.python_path_to_test_package)
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
 
@@ -65,11 +65,10 @@ class MigrateForwardTestCase(DatabaseTestCase):
         self.api.create(self.python_path_to_test_package, 'test_migration_name2')
         self.api.migrate(self.python_path_to_test_package)
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 2)
-#
-#     def test_forward_from_packages_config_section(self):
-#         print __name__
-#         self.api.migrate()
-#         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
+
+    def test_forward_from_packages_config_section(self):
+        self.api.migrate()
+        self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
 
 
 class MigrateBackwardTestCase(DatabaseTestCase):
@@ -113,20 +112,20 @@ class StatusTestCase(DatabaseTestCase):
         super(StatusTestCase, self).setUp()
         self.api._create_migration_history_table_if_not_exists()
         self.api.database_helper.write_migration_history('0001_initial', 'test_package')
-        self.api.database_api.commit()
+        database_api_storage.database_api.commit()
 
     def tearDown(self):
         super(StatusTestCase, self).tearDown()
 
     def test_correct_status_for_multiple_migrations(self):
         self.api.database_helper.write_migration_history('0002_do_something', 'test_package')
-        self.api.database_api.commit()
+        database_api_storage.database_api.commit()
         data = self.api.status()
         self.assertEqual(len(data.keys()), 1)
 
     def test_correct_status_for_multiple_migrations_with_package(self):
         self.api.database_helper.write_migration_history('0002_do_something', 'test_package')
-        self.api.database_api.commit()
+        database_api_storage.database_api.commit()
         data = self.api.status(package='test_package')
         self.assertEqual(len(data.keys()), 1)
 

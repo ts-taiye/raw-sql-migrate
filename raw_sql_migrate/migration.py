@@ -7,6 +7,7 @@ from sys import stdout
 
 from raw_sql_migrate.helpers import MigrationHelper, FileSystemHelper
 from raw_sql_migrate.exceptions import IncorrectMigrationFile
+from raw_sql_migrate.engines import database_api_storage
 
 __all__ = (
     'Migration',
@@ -37,13 +38,11 @@ class Migration(object):
     fs_migration_directory = None
     fs_file_name = None
     module = None
-    database_api = None
     config = None
 
-    def __init__(self, py_package, database_api, config, py_module_name=None):
+    def __init__(self, py_package, config, py_module_name=None):
         self.py_package = py_package
         self.fs_migration_directory = FileSystemHelper.get_package_migrations_directory(py_package)
-        self.database_api = database_api
         self.config = config
         self.py_module_name = py_module_name.rstrip('.py')
         self.fs_file_name = '%s.py' % py_module_name
@@ -66,21 +65,21 @@ class Migration(object):
             stdout.write('Migrating %s to migration %s in package %s\n' % (
                 migration_direction, self.py_module_name, self.py_package,
             ))
-            handler(self.database_api)
+            handler(database_api_storage.database_api)
         else:
             raise IncorrectMigrationFile('Module %s has no %s function' % (
                 self.module, migration_direction,
             ))
 
         try:
-            handler(self.database_api)
+            handler(database_api_storage.database_api)
             if migration_direction == MigrationHelper.MigrationDirection.FORWARD:
                 self.write_migration_history()
             else:
                 self.delete_migration_history()
-            self.database_api.commit()
+            database_api_storage.database_api.commit()
         except Exception as e:
-            self.database_api.rollback()
+            database_api_storage.database_api.rollback()
             raise e
 
     def write_migration_history(self):
@@ -92,7 +91,9 @@ class Migration(object):
             INSERT INTO %s(name, package)
             VALUES (%%s, %%s);
         ''' % self.config.history_table_name
-        self.database_api.execute(sql, params=(self.py_module_name, self.py_package, ), return_result=None)
+        database_api_storage.database_api.execute(
+            sql, params=(self.py_module_name, self.py_package, ), return_result=None
+        )
 
     def delete_migration_history(self):
         """
@@ -103,10 +104,12 @@ class Migration(object):
             DELETE FROM %s
             WHERE name=%%s and package=%%s
         ''' % self.config.history_table_name
-        self.database_api.execute(sql, params=(self.py_module_name, self.py_package, ), return_result=None)
+        database_api_storage.database_api.execute(
+            sql, params=(self.py_module_name, self.py_package, ), return_result=None
+        )
 
     @staticmethod
-    def create(py_package, name, database_api, config):
+    def create(py_package, name, config):
         """
         Creates new migration and binds current instance to result module
         :param name: new migration name given by user. Example: initial
@@ -116,10 +119,10 @@ class Migration(object):
         fs_migration_directory = FileSystemHelper.get_package_migrations_directory(py_package)
         fs_file_name = MigrationHelper.generate_migration_name(name, current_migration_number + 1)
         MigrationHelper.create_migration_file(fs_migration_directory, fs_file_name)
-        return Migration(py_package, database_api, config, fs_file_name.rstrip('.py'))
+        return Migration(py_package, config, fs_file_name.rstrip('.py'))
 
     @staticmethod
-    def create_squashed(py_package, name, migration_number, forward_content, backward_content, database_api, config):
+    def create_squashed(py_package, name, migration_number, forward_content, backward_content, config):
         """
         Creates squashed migration and binds current instance to result module
         :param name: new migration name given by user. Example: initial
@@ -136,4 +139,4 @@ class Migration(object):
         fs_file_path = path.join(fs_migration_directory, name)
         with open(fs_file_path, 'w') as file_descriptor:
             file_descriptor.write(MigrationHelper.MIGRATION_TEMPLATE % (forward_content, backward_content, ))
-        return Migration(py_package, database_api, config, name.rstrip('.py'))
+        return Migration(py_package, config, name.rstrip('.py'))

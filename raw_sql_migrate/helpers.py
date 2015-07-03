@@ -66,7 +66,7 @@ class FileSystemHelper(object):
         forward_start_index = None
         forward_end_index = None
         backward_start_index = None
-        backward_end_index = lines.index(lines[-1])
+        backward_end_index = len(lines)
 
         for line in lines:
             if 'def forward(' in line:
@@ -78,8 +78,8 @@ class FileSystemHelper(object):
             raise IncorrectMigrationFile('Incorrect migration file found: %s' % file_path)
 
         return (
-            str(lines[forward_start_index:forward_end_index]),
-            str(lines[backward_start_index:backward_end_index]),
+            ''.join(lines[forward_start_index:forward_end_index]).replace('\n\n', '\n'),
+            ''.join(lines[backward_start_index:backward_end_index]).replace('\n\n', '\n'),
         )
 
 class MigrationHelper(object):
@@ -103,8 +103,7 @@ def forward(database_api):
 
 def backward(database_api):
 %s
-
-    """
+"""
     INIT_FILE_TEMPLATE = """
 # -*- coding: utf-8 -*-
 

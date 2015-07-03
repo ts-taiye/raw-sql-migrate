@@ -12,6 +12,7 @@ from raw_sql_migrate.exceptions import (
 )
 from raw_sql_migrate.helpers import FileSystemHelper, MigrationHelper, DatabaseHelper
 from raw_sql_migrate.migration import Migration
+from raw_sql_migrate.engines import database_api_storage
 
 __all__ = (
     'Api',
@@ -21,7 +22,6 @@ __all__ = (
 class Api(object):
 
     config = None
-    database_api = None
     database_helper = None
 
     def __init__(self, config=None):
@@ -34,18 +34,18 @@ class Api(object):
 
         try:
             database_api_module = import_module(self.config.engine)
-            self.database_api = database_api_module.DatabaseApi(
+            database_api_storage.set_database_api(database_api_module.DatabaseApi(
                 self.config.host,
                 self.config.port,
                 self.config.name,
                 self.config.user,
                 self.config.password,
                 self.config.additional_connection_params
-            )
+            ))
         except (ImportError, AttributeError, ):
             raise IncorrectDbBackendException(u'Failed to import given database engine: %s' % self.config.engine)
 
-        self.database_helper = DatabaseHelper(self.database_api, self.config.history_table_name)
+        self.database_helper = DatabaseHelper(database_api_storage.database_api, self.config.history_table_name)
 
     def _create_migration_history_table_if_not_exists(self):
         if not self.database_helper.migration_history_exists():
@@ -99,7 +99,6 @@ class Api(object):
         Migration.create(
             py_package=package,
             name=name,
-            database_api=self.database_api,
             config=self.config
         )
 
@@ -157,8 +156,7 @@ class Api(object):
             for migration_number_to_apply in numbers_to_apply:
                 file_name = migration_data[migration_number_to_apply]['file_name']
                 migration = Migration(
-                    py_package=package,
-                    database_api=self.database_api,
+                    py_package=package_for_migrate,
                     config=self.config,
                     py_module_name=file_name
                 )
@@ -236,7 +234,6 @@ class Api(object):
         Migration.create_squashed(
             py_package=package,
             name=name,
-            database_api=self.database_api,
             config=self.config,
             migration_number=first_migration_number,
             forward_content=result_forward_content,
