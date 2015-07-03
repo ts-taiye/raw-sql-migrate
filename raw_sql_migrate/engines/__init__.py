@@ -8,11 +8,10 @@ class DatabaseApiStorage(object):
 
     _database_api = None
 
-    @property
-    def database_api(self):
-        return self._database_api
-
     def set_database_api(self, database_api_instance):
         self._database_api = database_api_instance
 
-database_api_storage = DatabaseApiStorage()
+    def __getattr__(self, item):
+        return self._database_api and getattr(self._database_api, item)
+
+database_api = DatabaseApiStorage()

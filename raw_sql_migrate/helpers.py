@@ -4,8 +4,8 @@ import os
 
 from importlib import import_module
 
-from raw_sql_migrate import config_storage
-from raw_sql_migrate.engines import database_api_storage
+from raw_sql_migrate import rsm_config
+from raw_sql_migrate.engines import database_api
 from raw_sql_migrate.exceptions import IncorrectPackage, IncorrectMigrationFile
 
 __all__ = (
@@ -180,9 +180,9 @@ class DatabaseHelper(object):
             WHERE table_name=%(history_table_name)s
         '''
 
-        result = database_api_storage.database_api.execute(
+        result = database_api.execute(
             sql,
-            params={'history_table_name': config_storage.config.history_table_name},
+            params={'history_table_name': rsm_config.history_table_name},
             return_result='rowcount',
         )
 
@@ -199,10 +199,10 @@ class DatabaseHelper(object):
                 FROM %s
                 WHERE package = %%s
                 ORDER BY id DESC LIMIT 1;
-            ''' % config_storage.config.history_table_name
+            ''' % rsm_config.history_table_name
             query_params = (package,)
 
-            rows = database_api_storage.database_api.execute(sql, params=query_params, return_result='fetchall')
+            rows = database_api.execute(sql, params=query_params, return_result='fetchall')
             if rows:
                 name = rows[0][0]
                 result = int(name.split('_')[0].strip('0'))
@@ -219,22 +219,22 @@ class DatabaseHelper(object):
                 name VARCHAR(200) NOT NULL,
                 processed_at  TIMESTAMP default current_timestamp
             );
-        ''' % config_storage.config.history_table_name
-        database_api_storage.database_api.execute(
+        ''' % rsm_config.history_table_name
+        database_api.execute(
             sql, params=(), return_result=None
         )
-        database_api_storage.database_api.commit()
+        database_api.commit()
 
     @staticmethod
     def drop_history_table():
 
         sql = '''
             DROP TABLE %s;
-        ''' % config_storage.config.history_table_name
-        database_api_storage.database_api.execute(
-            sql, params=(config_storage.config.history_table_name,), return_result=None
+        ''' % rsm_config.history_table_name
+        database_api.execute(
+            sql, params=(rsm_config.history_table_name,), return_result=None
         )
-        database_api_storage.database_api.commit()
+        database_api.commit()
 
     @staticmethod
     def write_migration_history(name, package):
@@ -242,20 +242,20 @@ class DatabaseHelper(object):
         sql = '''
             INSERT INTO %s(name, package)
             VALUES (%%s, %%s);
-        ''' % config_storage.config.history_table_name
-        database_api_storage.database_api.execute(sql, params=(name, package, ), return_result=None)
+        ''' % rsm_config.history_table_name
+        database_api.execute(sql, params=(name, package, ), return_result=None)
 
     @staticmethod
     def delete_migration_history(name, package):
         sql = '''
             DELETE FROM %s
             WHERE name=%%s and package=%%s
-        ''' % config_storage.config.history_table_name
-        database_api_storage.database_api.execute(sql, params=(name, package, ), return_result=None)
+        ''' % rsm_config.history_table_name
+        database_api.execute(sql, params=(name, package, ), return_result=None)
 
     @staticmethod
     def status(package=None):
-        migration_history_param = (config_storage.config.history_table_name, ) * 2
+        migration_history_param = (rsm_config.history_table_name, ) * 2
         if package:
             sql = '''
                 SELECT package, name, processed_at FROM  %s
@@ -279,8 +279,8 @@ class DatabaseHelper(object):
             '''
             params = ()
         sql = sql % migration_history_param
-        rows = database_api_storage.database_api.execute(
-            sql, params=params, return_result=database_api_storage.database_api.CursorResult.FETCHALL
+        rows = database_api.execute(
+            sql, params=params, return_result=database_api.CursorResult.FETCHALL
         )
         result = {}
         for row in rows:

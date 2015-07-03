@@ -5,8 +5,8 @@ from sys import stdout
 
 from importlib import import_module
 
-from raw_sql_migrate import Config, config_storage
-from raw_sql_migrate.engines import database_api_storage
+from raw_sql_migrate import Config, rsm_config
+from raw_sql_migrate.engines import database_api
 from raw_sql_migrate.exceptions import (
     InconsistentParamsException, NoMigrationsFoundToApply,
     ParamRequiredException, IncorrectDbBackendException,
@@ -29,10 +29,10 @@ class Api(object):
         else:
             config_instance = Config()
             config_instance.init_from_file()
-        config_storage.set_config_instance(config_instance)
+        rsm_config.set_config_instance(config_instance)
         try:
             database_api_module = import_module(config.engine)
-            database_api_storage.set_database_api(database_api_module.DatabaseApi(
+            database_api.set_database_api(database_api_module.DatabaseApi(
                 config.host,
                 config.port,
                 config.name,
@@ -62,8 +62,8 @@ class Api(object):
         if package is not None:
             packages = (package, )
         elif package is None and migration_number is None:
-            if config_storage.config.packages:
-                packages = config_storage.config.packages
+            if rsm_config.packages:
+                packages = rsm_config.packages
             else:
                 raise InconsistentParamsException(
                     'Inconsistent params: specify package or packages list in config'
@@ -226,7 +226,6 @@ class Api(object):
         Migration.create_squashed(
             py_package=package,
             name=name,
-            config=config_storage.config,
             migration_number=first_migration_number,
             forward_content=result_forward_content,
             backward_content=result_backward_content

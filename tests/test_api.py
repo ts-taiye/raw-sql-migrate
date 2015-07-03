@@ -3,8 +3,8 @@
 from os.path import exists
 
 from raw_sql_migrate.exceptions import ParamRequiredException
+from raw_sql_migrate.engines import database_api
 from raw_sql_migrate.helpers import FileSystemHelper, DatabaseHelper
-from raw_sql_migrate.engines import database_api_storage
 
 from tests.base import DatabaseTestCase
 
@@ -111,20 +111,20 @@ class StatusTestCase(DatabaseTestCase):
         super(StatusTestCase, self).setUp()
         self.api._create_migration_history_table_if_not_exists()
         DatabaseHelper.write_migration_history('0001_initial', 'test_package')
-        database_api_storage.database_api.commit()
+        database_api.commit()
 
     def tearDown(self):
         super(StatusTestCase, self).tearDown()
 
     def test_correct_status_for_multiple_migrations(self):
         DatabaseHelper.write_migration_history('0002_do_something', 'test_package')
-        database_api_storage.database_api.commit()
+        database_api.commit()
         data = self.api.status()
         self.assertEqual(len(data.keys()), 1)
 
     def test_correct_status_for_multiple_migrations_with_package(self):
         DatabaseHelper.write_migration_history('0002_do_something', 'test_package')
-        database_api_storage.database_api.commit()
+        database_api.commit()
         data = self.api.status(package='test_package')
         self.assertEqual(len(data.keys()), 1)
 

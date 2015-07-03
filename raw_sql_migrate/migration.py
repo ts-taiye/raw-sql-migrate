@@ -5,9 +5,9 @@ from os import path
 from importlib import import_module
 from sys import stdout
 
-from raw_sql_migrate import config_storage
+from raw_sql_migrate import rsm_config
 from raw_sql_migrate.helpers import MigrationHelper, FileSystemHelper
-from raw_sql_migrate.engines import database_api_storage
+from raw_sql_migrate.engines import database_api
 from raw_sql_migrate.exceptions import IncorrectMigrationFile
 
 __all__ = (
@@ -63,21 +63,21 @@ class Migration(object):
             stdout.write('Migrating %s to migration %s in package %s\n' % (
                 migration_direction, self.py_module_name, self.py_package,
             ))
-            handler(database_api_storage.database_api)
+            handler(database_api)
         else:
             raise IncorrectMigrationFile('Module %s has no %s function' % (
                 self.module, migration_direction,
             ))
 
         try:
-            handler(database_api_storage.database_api)
+            handler(database_api)
             if migration_direction == MigrationHelper.MigrationDirection.FORWARD:
                 self.write_migration_history()
             else:
                 self.delete_migration_history()
-            database_api_storage.database_api.commit()
+            database_api.commit()
         except Exception as e:
-            database_api_storage.database_api.rollback()
+            database_api.rollback()
             raise e
 
     def write_migration_history(self):
@@ -88,8 +88,8 @@ class Migration(object):
         sql = '''
             INSERT INTO %s(name, package)
             VALUES (%%s, %%s);
-        ''' % config_storage.config.history_table_name
-        database_api_storage.database_api.execute(
+        ''' % rsm_config.history_table_name
+        database_api.execute(
             sql, params=(self.py_module_name, self.py_package, ), return_result=None
         )
 
@@ -101,8 +101,8 @@ class Migration(object):
         sql = '''
             DELETE FROM %s
             WHERE name=%%s and package=%%s
-        ''' % config_storage.config.history_table_name
-        database_api_storage.database_api.execute(
+        ''' % rsm_config.history_table_name
+        database_api.execute(
             sql, params=(self.py_module_name, self.py_package, ), return_result=None
         )
 
@@ -120,7 +120,7 @@ class Migration(object):
         return Migration(py_package, fs_file_name.rstrip('.py'))
 
     @staticmethod
-    def create_squashed(py_package, name, migration_number, forward_content, backward_content, config):
+    def create_squashed(py_package, name, migration_number, forward_content, backward_content):
         """
         Creates squashed migration and binds current instance to result module
         :param name: new migration name given by user. Example: initial

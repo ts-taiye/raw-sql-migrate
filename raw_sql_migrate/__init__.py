@@ -109,11 +109,10 @@ class ConfigStorage(object):
 
     _config = None
 
-    @property
-    def config(self):
-        return self._config
-
     def set_config_instance(self, config_instance):
         self._config = config_instance
 
-config_storage = ConfigStorage()
+    def __getattr__(self, item):
+        return self._config and getattr(self._config, item)
+
+rsm_config = ConfigStorage()
