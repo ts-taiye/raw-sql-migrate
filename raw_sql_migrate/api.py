@@ -24,12 +24,14 @@ class Api(object):
     database_helper = None
 
     def __init__(self, config=None):
+
         if config is not None:
             config_instance = config
         else:
             config_instance = Config()
             config_instance.init_from_file()
         rsm_config.set_config_instance(config_instance)
+
         try:
             database_api_module = import_module(config.engine)
             database_api.set_database_api(database_api_module.DatabaseApi(

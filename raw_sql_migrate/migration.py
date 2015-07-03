@@ -29,7 +29,6 @@ class Migration(object):
     :var fs_file_name: string containing file name of migration
     Example: 0001_initial.py
     :var module: module object of migration
-    :var database_api: database connection wrapper
     """
     py_package = None
     py_migration_package = None
