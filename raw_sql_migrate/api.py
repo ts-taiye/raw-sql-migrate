@@ -96,12 +96,12 @@ class Api(object):
 
         self._create_migration_history_table_if_not_exists()
 
-        migration = Migration(
+        Migration.create(
             py_package=package,
+            name=name,
             database_api=self.database_api,
             config=self.config
         )
-        migration.create(name)
 
     def migrate(self, package=None, migration_number=None):
         """
@@ -227,7 +227,19 @@ class Api(object):
             new_file_path = path.join(migration_data[key]['file_directory'], new_file_name)
             rename(migration_data[key]['file_path'], new_file_path)
 
-        first_migration_number = ordered_keys[-1]
+        first_migration_number = ordered_keys[0]
 
-        migration = Migration(package, database_api=self.database_api, config=self.config)
-        migration.create_squashed(name, first_migration_number, result_forward_content, result_backward_content)
+        print first_migration_number
+        print result_forward_content
+        print result_backward_content
+
+        Migration.create_squashed(
+            py_package=package,
+            name=name,
+            database_api=self.database_api,
+            config=self.config,
+            migration_number=first_migration_number,
+            forward_content=result_forward_content,
+            backward_content=result_backward_content
+        )
+

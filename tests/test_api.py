@@ -43,8 +43,8 @@ class GenerateMigrationNameTestCase(DatabaseTestCase):
     def test_history_table_created(self):
         self.api.create(self.python_path_to_test_package, 'test_migration_name')
         self.assertTrue(self.api.database_helper.migration_history_exists())
-
-
+#
+#
 class MigrateForwardTestCase(DatabaseTestCase):
 
     def setUp(self):
@@ -56,17 +56,20 @@ class MigrateForwardTestCase(DatabaseTestCase):
         super(MigrateForwardTestCase, self).tearDown()
 
     def test_migrate_forward(self):
+        print __name__
         self.api.migrate(self.python_path_to_test_package)
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
 
     def test_create_and_forward_two_migrations(self):
+        print __name__
         self.api.create(self.python_path_to_test_package, 'test_migration_name2')
         self.api.migrate(self.python_path_to_test_package)
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 2)
-
-    def test_forward_from_packages_config_section(self):
-        self.api.migrate()
-        self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
+#
+#     def test_forward_from_packages_config_section(self):
+#         print __name__
+#         self.api.migrate()
+#         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
 
 
 class MigrateBackwardTestCase(DatabaseTestCase):
@@ -80,11 +83,8 @@ class MigrateBackwardTestCase(DatabaseTestCase):
         super(MigrateBackwardTestCase, self).tearDown()
 
     def test_migrate_backward(self):
-        print 1
         self.assertTrue(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 1)
-        print 2
         self.api.migrate(self.python_path_to_test_package, 0)
-        print 3
         self.assertEqual(self.api.database_helper.get_latest_migration_number(self.python_path_to_test_package), 0)
 
 class SquashTestCase(DatabaseTestCase):
