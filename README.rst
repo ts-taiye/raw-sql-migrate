@@ -1,5 +1,5 @@
-Statuses
-========
+Status
+======
 
 Latest stable
 -------------
