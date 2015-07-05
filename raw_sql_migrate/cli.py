@@ -7,6 +7,12 @@ from raw_sql_migrate.api import Api
 from raw_sql_migrate.exceptions import NoMigrationsFoundToApply, InconsistentParamsException
 
 
+STATUS_HEADER_STRING = '%-40s %-40s %-40s \n' % (u'package', u'name', u'processed_at', )
+AFTER_STATUS_HEADER_STRING = '%s \n' % (u'-' * 120)
+STATUS_TEMPLATE_STRING = '%-40s %-40s %-40s \n'
+NO_MIGRATION_STRING = 'No migration history found.\n'
+
+
 def _get_api(config_path=None):
     config = None
     if config_path:
@@ -22,20 +28,21 @@ def _get_api(config_path=None):
 
 def status(args):
 
+    print args
     api = _get_api(config_path=args.config)
-
+    print api
     if not api:
         return
 
     result = api.status(package=args.package)
     if not result:
-        sys.stdout.write('No migration history found.\n')
+        sys.stdout.write(NO_MIGRATION_STRING)
         return
-    sys.stdout.write('%-40s %-40s %-40s \n' % (u'package', u'name', u'processed_at', ))
-    sys.stdout.write('%s \n' % (u'-' * 120))
+    sys.stdout.write(STATUS_HEADER_STRING)
+    sys.stdout.write(AFTER_STATUS_HEADER_STRING)
     for package in result:
         sys.stdout.write(
-            '%-40s %-40s %-40s \n' % (package, result[package]['name'], result[package]['processed_at'], )
+            STATUS_TEMPLATE_STRING % (package, result[package]['name'], result[package]['processed_at'], )
         )
 
 
