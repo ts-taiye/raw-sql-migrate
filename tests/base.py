@@ -35,10 +35,11 @@ class BaseTestCase(TestCase):
 
 class DatabaseTestCase(BaseTestCase):
 
-    def setUp(self):
-        self.config = Config()
-        self.config.init_from_file()
-        self.api = Api(self.config)
+    @classmethod
+    def setUpClass(cls):
+        cls.config = Config()
+        cls.config.init_from_file()
+        cls.api = Api(cls.config)
 
     def tearDown(self):
         try:

@@ -96,10 +96,11 @@ class Api(object):
 
         self._create_migration_history_table_if_not_exists()
 
-        Migration.create(
+        migration = Migration.create(
             py_package=package,
             name=name
         )
+        return migration.fs_file_name
 
     def migrate(self, package=None, migration_number=None):
         """
