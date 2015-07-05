@@ -6,7 +6,7 @@ from importlib import import_module
 from sys import stdout
 
 from raw_sql_migrate import rsm_config
-from raw_sql_migrate.helpers import MigrationHelper, FileSystemHelper
+from raw_sql_migrate.helpers import MigrationHelper, FileSystemHelper, DatabaseHelper
 from raw_sql_migrate.engines import database_api
 from raw_sql_migrate.exceptions import IncorrectMigrationFile
 
@@ -84,26 +84,14 @@ class Migration(object):
         Writes migrate history entity for given migration
         :return:
         """
-        sql = '''
-            INSERT INTO %s(name, package)
-            VALUES (%%s, %%s);
-        ''' % rsm_config.history_table_name
-        database_api.execute(
-            sql, params=(self.py_module_name, self.py_package, ), return_result=None
-        )
+        DatabaseHelper.write_migration_history(self.py_module_name, self.py_package)
 
     def delete_migration_history(self):
         """
         Deletes migrate history entity in DB for given migration
         :return:
         """
-        sql = '''
-            DELETE FROM %s
-            WHERE name=%%s and package=%%s
-        ''' % rsm_config.history_table_name
-        database_api.execute(
-            sql, params=(self.py_module_name, self.py_package, ), return_result=None
-        )
+        DatabaseHelper.delete_migration_history(self.py_module_name, self.py_package)
 
     @staticmethod
     def create(py_package, name):
