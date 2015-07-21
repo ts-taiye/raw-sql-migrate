@@ -66,12 +66,13 @@ class Config(object):
     def _import_from_yaml_file(self, path_to_config=None):
         path_to_config = path_to_config or 'rsm.yaml'
 
+        if not os.path.exists(path_to_config):
+            return None
+
         try:
             from yaml import load
         except ImportError:
-            return None
-
-        if not os.path.exists(path_to_config):
+            sys.stdout.write('Found config on path %s, but PyYAML is not installed' % path_to_config)
             return None
 
         with open(path_to_config, 'r') as file_stream:
