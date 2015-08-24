@@ -1,9 +1,23 @@
+Status
+======
+
+Latest stable
+-------------
+
 .. image:: https://travis-ci.org/ts-taiye/raw-sql-migrate.svg?branch=master
     :target: https://travis-ci.org/ts-taiye/raw-sql-migrate
 
 .. image:: https://coveralls.io/repos/ts-taiye/raw-sql-migrate/badge.svg?branch=master
   :target: https://coveralls.io/r/ts-taiye/raw-sql-migrate?branch=master
 
+Develop
+-------
+
+.. image:: https://travis-ci.org/ts-taiye/raw-sql-migrate.svg?branch=develop
+    :target: https://travis-ci.org/ts-taiye/raw-sql-migrate
+
+.. image:: https://coveralls.io/repos/ts-taiye/raw-sql-migrate/badge.svg?branch=develop
+  :target: https://coveralls.io/r/ts-taiye/raw-sql-migrate?branch=develop
 
 
 Goal

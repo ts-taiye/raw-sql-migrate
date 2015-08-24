@@ -2,15 +2,15 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.2.1'
+__version__ = '0.3.0'
 
-requirements = [i.strip() for i in open('requirements.txt').readlines()]
+requirements = []
 
 setup(
     name='raw-sql-migrate',
     version=__version__,
     url='https://github.com/ts-taiye/raw-sql-migrate',
-    author='ts.taiye aka Vadim Tsander',
+    author='Vadim Tsander',
     author_email='ts.taiye@live.com',
     maintainer_email='ts.taiye@live.com',
     description='Simple tool for managing raw sql migrations scripts.',

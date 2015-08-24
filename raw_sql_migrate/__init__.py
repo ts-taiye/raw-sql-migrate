@@ -66,12 +66,13 @@ class Config(object):
     def _import_from_yaml_file(self, path_to_config=None):
         path_to_config = path_to_config or 'rsm.yaml'
 
+        if not os.path.exists(path_to_config):
+            return None
+
         try:
             from yaml import load
         except ImportError:
-            return None
-
-        if not os.path.exists(path_to_config):
+            sys.stdout.write('Found config on path %s, but PyYAML is not installed' % path_to_config)
             return None
 
         with open(path_to_config, 'r') as file_stream:
@@ -103,3 +104,16 @@ class Config(object):
         history_table_name = config_data.get('history_table_name')
         packages = config_data.get('packages')
         self.__init__(database_settings, history_table_name, packages)
+
+
+class ConfigStorage(object):
+
+    _config = None
+
+    def set_config_instance(self, config_instance):
+        self._config = config_instance
+
+    def __getattr__(self, item):
+        return self._config and getattr(self._config, item)
+
+rsm_config = ConfigStorage()

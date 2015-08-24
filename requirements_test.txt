@@ -1,0 +1,4 @@
+nose
+mock
+
+# Install PyYAML if you want to use yaml configs

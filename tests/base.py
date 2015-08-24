@@ -7,6 +7,7 @@ from unittest import TestCase
 
 from raw_sql_migrate import Config
 from raw_sql_migrate.api import Api
+from raw_sql_migrate.engines import database_api
 
 
 __all__ = (
@@ -34,19 +35,20 @@ class BaseTestCase(TestCase):
 
 class DatabaseTestCase(BaseTestCase):
 
-    def setUp(self):
-        self.config = Config()
-        self.config.init_from_file()
-        self.api = Api(self.config)
+    @classmethod
+    def setUpClass(cls):
+        cls.config = Config()
+        cls.config.init_from_file()
+        cls.api = Api(cls.config)
 
     def tearDown(self):
         try:
-            self.api.database_helper.database_api.execute(
+            database_api.execute(
                 '''
                 DROP TABLE %s;
                 ''' % self.config.history_table_name
             )
-            self.api.database_helper.database_api.commit()
+            database_api.commit()
         except:
             pass
         super(DatabaseTestCase, self).tearDown()
