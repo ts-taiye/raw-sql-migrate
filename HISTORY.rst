@@ -7,3 +7,7 @@ v0.3.0
 ======
 * Code refactoring, minor bug fixing
 
+
+v0.3.1
+======
+* Fixed bug with python config given by param to rsm
