@@ -47,7 +47,6 @@ class BaseApi(object):
         self._connection.commit()
 
     def execute(self, sql, params=None, return_result=None):
-
         if not params:
             params = {}
 
