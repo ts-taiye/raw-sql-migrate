@@ -27,10 +27,7 @@ def _get_api(config_path=None):
 
 
 def status(args):
-
-    print args
     api = _get_api(config_path=args.config)
-    print api
     if not api:
         return
 

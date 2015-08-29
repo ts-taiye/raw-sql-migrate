@@ -91,7 +91,7 @@ class Config(object):
             if not config_data:
                 raise ConfigNotFoundException('Neither .py nor .yaml config is not found')
         else:
-            config_type = os.path.splitext(path_to_config)[1]
+            config_type = '.yaml' if path_to_config.endswith('.yaml') else '.py'
             if config_type not in self.config_type_handlers:
                 raise ConfigNotFoundException('Strange config type - %s' % config_type)
 
