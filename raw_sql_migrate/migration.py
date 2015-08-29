@@ -54,7 +54,7 @@ class Migration(object):
         :param migration_direction: Direction towards which to migrate. Can be forward or backward.
         :return:
         """
-        
+
         assert self.module is not None
 
         if hasattr(self.module, migration_direction):
@@ -62,7 +62,6 @@ class Migration(object):
             stdout.write('Migrating %s to migration %s in package %s\n' % (
                 migration_direction, self.py_module_name, self.py_package,
             ))
-            handler(database_api)
         else:
             raise IncorrectMigrationFile('Module %s has no %s function' % (
                 self.module, migration_direction,
@@ -76,7 +75,9 @@ class Migration(object):
                 self.delete_migration_history()
             database_api.commit()
         except Exception as e:
-            database_api.rollback()
+            if not database_api._connection.closed:
+                database_api.rollback()
+                database_api._connection.close()
             raise e
 
     def write_migration_history(self):
