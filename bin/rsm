@@ -23,7 +23,7 @@ def parse_args():
     parser_create.set_defaults(func=create)
 
     parser_migrate = subparsers.add_parser('migrate', help='Migrate to specified migration number')
-    parser_migrate.add_argument('package', help='Package name')
+    parser_migrate.add_argument('--package', help='Package name')
     parser_migrate.add_argument('migration_number', nargs='?', help='Migration number')
     parser_migrate.add_argument('-c', '--config', help='Path to config file')
     parser_migrate.set_defaults(func=migrate)
