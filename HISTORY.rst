@@ -11,3 +11,8 @@ v0.3.0
 v0.3.1
 ======
 * Fixed bug with python config given by param to rsm
+
+v0.3.2
+======
+* Fixed bug when rsm tried to close already closed connection
+* Fixed bug when rsm tried to apply migration twice
