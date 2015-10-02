@@ -20,3 +20,8 @@ v0.3.2
 v0.3.3
 ======
 * Fixed issue when rsm cli required providing package for migrate command
+
+v0.3.4
+======
+* Removed tests from package source
+

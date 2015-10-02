@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.3.3'
+__version__ = '0.3.4'
 
 requirements = []
 
@@ -15,7 +15,7 @@ setup(
     maintainer_email='ts.taiye@live.com',
     description='Simple tool for managing raw sql migrations scripts.',
     long_description=open('README.rst').read(),
-    packages=find_packages(),
+    packages=find_packages(exclude=['*test*']),
     include_package_data=True,
     install_requires=requirements,
     scripts=['bin/rsm'],

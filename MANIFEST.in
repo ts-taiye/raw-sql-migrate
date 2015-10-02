@@ -1,3 +1,5 @@
 include MANIFEST.in Readme.in
 recursive-include raw_sql_migrate *.*
+recursive-exclude tests *
+recursive-exclude raw_sql_migrate *.pyc
 prune "*.pyc"
