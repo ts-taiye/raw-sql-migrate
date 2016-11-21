@@ -18,6 +18,19 @@ __all__ = (
 class FileSystemHelper(object):
 
     @staticmethod
+    def trim_py_extension(filename):
+        """
+        :param filename: string filename to trim 'py'' extension
+        """
+        if filename is None:
+            return
+
+        if filename.endswith('.py'):
+            return filename[:-3]
+
+        return filename
+
+    @staticmethod
     def get_package_migrations_directory(package):
         try:
             package_module = import_module(package)

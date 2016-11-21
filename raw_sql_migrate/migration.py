@@ -41,7 +41,7 @@ class Migration(object):
     def __init__(self, py_package, py_module_name=None):
         self.py_package = py_package
         self.fs_migration_directory = FileSystemHelper.get_package_migrations_directory(py_package)
-        self.py_module_name = py_module_name.rstrip('.py')
+        self.py_module_name = FileSystemHelper.trim_py_extension(py_module_name)
         self.fs_file_name = '%s.py' % py_module_name
         self.py_module, self.py_module_name = FileSystemHelper.get_migration_python_path_and_name(
             py_module_name, py_package
@@ -105,7 +105,7 @@ class Migration(object):
         fs_migration_directory = FileSystemHelper.get_package_migrations_directory(py_package)
         fs_file_name = MigrationHelper.generate_migration_name(name, current_migration_number + 1)
         MigrationHelper.create_migration_file(fs_migration_directory, fs_file_name)
-        return Migration(py_package, fs_file_name.rstrip('.py'))
+        return Migration(py_package, FileSystemHelper.trim_py_extension(fs_file_name))
 
     @staticmethod
     def create_squashed(py_package, name, migration_number, forward_content, backward_content):
@@ -125,4 +125,4 @@ class Migration(object):
         fs_file_path = path.join(fs_migration_directory, name)
         with open(fs_file_path, 'w') as file_descriptor:
             file_descriptor.write(MigrationHelper.MIGRATION_TEMPLATE % (forward_content, backward_content, ))
-        return Migration(py_package, name.rstrip('.py'))
+        return Migration(py_package, FileSystemHelper.trim_py_extension(name))
